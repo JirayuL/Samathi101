@@ -9,7 +9,6 @@ export const tabs = [
   { id: 'retreat', label: '7-Day Course' },
   { id: 'one-day', label: '1-Day Course' },
   { id: 'instructor', label: 'Instructor Course' },
-  { id: 'videos', label: 'Videos' },
   { id: 'contact', label: 'Contact Us' },
   { id: 'register', label: 'Register', highlight: true },
 ] as const;

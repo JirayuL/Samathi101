@@ -1,5 +1,5 @@
-# The check bot. On every pull request it builds the site and runs the link check (npm test),
-# the same check the deploy bot runs before publishing. A red X means the change would not deploy.
+# The check bot. On every pull request it builds the site and the demo, and runs the link check (npm test).
+# A red X means the change breaks the build, the demo or a link: fix it before merging.
 name: Check
 
 on:

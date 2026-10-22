@@ -9,11 +9,10 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && npm run demo",
     "preview": "astro preview",
-    "test": "astro build && python3 scripts/check-links.py dist/index.html",
+    "test": "npm run build && npm run check-links",
     "check-links": "python3 scripts/check-links.py dist/index.html",
-    "smoke-test": "python3 scripts/smoke-test.py",
     "demo": "astro build --base / --outDir dist-demo && python3 scripts/make-demo.py dist-demo demo/samathi101-demo.html",
     "astro": "astro"
   },
