@@ -2,29 +2,41 @@
 
 Landing page rebuilt from the Canva design, using [Astro](https://astro.build).
 
-**Working on the site? Start with [AGENTS.md](AGENTS.md)**: setup, where to edit, rules, testing, demos, deploying, the Google Sheet connection, troubleshooting and the open items.
+**Working on the site? Start with [AGENTS.md](AGENTS.md)**: setup, where to edit, rules, testing, demos, the Google Sheet connection, troubleshooting and the open items.
 
-**Why Astro:** pages are plain HTML + CSS components (easy to read and edit), the output is a static site that GitHub Pages hosts for free (see Hosting below), images are optimized automatically, and when you need server features later (forms, Thai language, a CMS, a database) Astro supports them without switching frameworks.
+**Why Astro:** pages are plain HTML + CSS components (easy to read and edit), the output is a static site that free hosts such as GitHub Pages can serve (see Hosting below), images are optimized automatically, and when you need server features later (forms, Thai language, a CMS, a database) Astro supports them without switching frameworks.
 
 ---
 
 ## How it fits together
 
 ```
-GitHub repo (main) ── deploy bot ──▶ GitHub Pages: the site (static, free)
-                                            │  fetch: read course info, send registrations
-                                            ▼
-                                     Google Apps Script web app ──▶ Google Sheet (private)
+GitHub repo (private) ──▶ static host (not chosen yet): the site, not published
+                               │  fetch: read course info, send registrations
+                               ▼
+                        Google Apps Script web app ──▶ Google Sheet (private)
 ```
 
-- **GitHub** keeps the code. Every merge into `main` is checked, published and checked again on the live site; if the live check fails, the last good version goes back up automatically (see Hosting).
-- **GitHub Pages** serves the site for free. It can't keep secrets, so the site holds no keys.
+- **GitHub** keeps the code in a private repo that only collaborators can see. The check bot tests every pull request.
+- **A static host** (to be chosen, see Hosting) will serve the site. It can't keep secrets, so the site holds no keys.
 - **Google Apps Script + Google Sheet** store what the site reads and writes. The script runs as the foundation's Google account; the Sheet stays private. Setup and rules: AGENTS.md → "Google Sheet".
 
 ## Demo for the client
 
-- **Review link:** https://jirayul.github.io/Samathi101/ shows the current `main` and updates itself after every merge.
-- **Single file:** `demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the YouTube video and the Google Sheet. It is a snapshot: run `npm run demo` to regenerate it after changes. Use it to show a change before it is merged.
+`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. While the site isn't published, this is how the client sees it.
+
+## Open items (22 Oct 2026)
+
+The same list is in AGENTS.md → "Open items"; when you finish or add one, update both.
+
+Content to confirm with the foundation:
+
+- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
+- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
+
+Design (needs approval, AGENTS.md rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under the 4.5:1 minimum for readable text. It is used for tab labels, the Register tab summaries and small labels.
+
+Hosting: decide how and when to publish (see Hosting below). Until then the site is private and shown with the single-file demo.
 
 ## Run it locally
 
@@ -33,9 +45,8 @@ Requires Node.js 22.22 or newer (24 recommended, as in `.node-version`) and Pyth
 ```bash
 npm ci             # install the exact versions in package-lock.json
 npm run dev        # http://localhost:4321/Samathi101/ — auto-reloads as you edit
-npm test           # build into dist/ and check every link (the bots run this too)
+npm test           # build into dist/, update the demo, check every link (the bots run this too)
 npm run preview    # serve dist/ at http://localhost:4321/Samathi101/ to double-check the build
-npm run smoke-test -- http://localhost:4321/Samathi101/   # check a running copy, as the bot checks the live site
 ```
 
 ## Where things are
@@ -45,16 +56,14 @@ src/
   data/
     courses.ts        ← ALL course content: text, dates, buttons, links, status, which tab
     tabs.ts           ← the tabs: names and order
-    videos.ts         ← YouTube videos on the Videos tab
     site.ts           ← page title, hero text, contact details
   components/
     Header.astro      ← logo + name, centered
-    Tabs.astro        ← sticky tab bar (Home, Children, 7-Day, 1-Day, Instructor, Videos, Contact, Register)
+    Tabs.astro        ← sticky tab bar (Home, Children, 7-Day, 1-Day, Instructor, Contact, Register)
     Hero.astro        ← forest-green banner with the gold lotus (Home tab)
     Lotus.astro       ← the lotus line drawing (large, animated) and small ornament
     Divider.astro     ← small lotus between hairlines
     Register.astro    ← Register tab: every course with its sign-up buttons
-    Videos.astro      ← Videos tab: embedded YouTube videos
     Lightbox.astro    ← click-to-preview for posters and photos
     CourseSection.astro  ← layout for every course block (image left, text right)
     Button.astro
@@ -67,11 +76,9 @@ src/
 public/               ← files served as-is (favicon, CNAME.disabled)
 scripts/
   check-links.py      ← link check (part of npm test)
-  smoke-test.py       ← checks a running copy of the site (the deploy bot runs it on the live site)
-  make-demo.py        ← builds the single-file demo (npm run demo)
-demo/                 ← the single-file demo for the client
+  make-demo.py        ← builds the single-file demo (runs with every npm run build and npm test)
+demo/                 ← the single-file demo for the client (regenerated by every build)
 .github/
-  workflows/deploy.yml   ← deploy bot: check, publish, check the live site, roll back if needed
   workflows/check.yml    ← check bot: runs npm test on every pull request
   pull_request_template.md ← the pre-push checklist, shown on every pull request
 .env.example          ← settings for your own computer (copy to .env); the Google Sheet test URL
@@ -92,7 +99,7 @@ apps-script/          ← (planned) the Google Apps Script code that reads and w
 | Lines shown on the Register tab | The course's `summary:` list in `courses.ts` |
 | Button look | `style: 'primary'` (robe ochre), `'secondary'` (forest green) or `'outline'` |
 | Change colors / fonts | `src/styles/global.css` (`:root` variables) |
-| Add or change a video | `src/data/videos.ts` (YouTube ID + optional start second) |
+| Add or change a course's video | `youtubeId` of the course in `src/data/courses.ts` (the part after `watch?v=`) |
 | Hero text and quote | `src/data/site.ts` |
 | Contact details | `src/data/site.ts` |
 
@@ -125,32 +132,34 @@ The existing courses keep their **Google Forms** (same links as the old Canva si
 
 Each Register button appears twice, on its course tab and on the Register tab, and both read the same entry in `courses.ts`.
 
-Content still to fill in (videos, fees, dates) is listed in AGENTS.md → "Open items".
+Content still to confirm is listed under "Open items" above.
 
-## Hosting: GitHub Pages (free)
+## Hosting (not published yet)
 
-**Updating the site:** open a pull request; the check bot (`.github/workflows/check.yml`) runs `npm test` on it. Merge it into `main` and the deploy bot (`.github/workflows/deploy.yml`) takes over:
+The repo is **private**: only its collaborators (**Settings → Collaborators**) can see the code. Nothing is published while we wait for the client's new course and content; the client sees the single-file demo.
 
-1. Builds the site and runs `npm test`. If that fails, nothing is published: the live site keeps the previous version.
-2. Publishes to GitHub Pages.
-3. Checks the live site with `scripts/smoke-test.py`: the page, every tab, every image, font and stylesheet.
-4. If that check fails, rebuilds the last version that passed, publishes it again and re-checks it (automatic rollback).
+**Every change:** open a pull request; the check bot (`.github/workflows/check.yml`) runs `npm test` on it. Merging into `main` doesn't publish anything.
 
-Any failure turns the run red in the **Actions** tab, and GitHub emails whoever pushed. The bot can also be run by hand: Actions → "Deploy to GitHub Pages" → Run workflow.
+**When the foundation is ready to publish**, the hosting choice depends on whether the repo stays private:
 
-**One-time setup** (repo admin)
-1. GitHub Pages is free only for **public** repositories (private needs a paid GitHub plan). Repo **Settings → General → Danger Zone → Change visibility → Public**. Nothing secret is in this repo; never commit passwords or API keys.
-2. Repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Repo **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request, and require the status check **check** (from the check bot) to pass. Then nobody can merge a change that fails `npm test`.
-4. Add volunteers under **Settings → Collaborators**.
-5. When the registration page goes live: **Settings → Secrets and variables → Actions → Variables → New repository variable** `PUBLIC_SHEET_API_URL` = the live Apps Script web app URL, then run the deploy bot by hand.
-6. Merge to `main` (or run the bot by hand). After a minute or two the site is live at **https://jirayul.github.io/Samathi101/**.
+- **GitHub Pages** (what `astro.config.mjs` is already set up for) is free only for **public** repos. A private repo needs a paid GitHub plan, and even then the published site is public. Nothing secret is in this repo, so making it public is safe, but then anyone can read the code.
+- To keep the repo private at zero cost, use a host that builds from private repos on a free plan, such as **Cloudflare Pages**. samathi101.com's DNS is already on Cloudflare.
+
+**A ready-made GitHub Pages deploy bot** was written and then removed for now. Each run built the site and ran `npm test` (nothing published if that failed), published to GitHub Pages, checked the live site (the page, every tab, every image, font and stylesheet), and republished the last version that passed if that check failed. To bring it back: `git fetch origin pull/1/head`, then `git checkout 8b2f262 -- .github/workflows/deploy.yml scripts/smoke-test.py`, then:
+
+1. Make the repo public (**Settings → General → Danger Zone → Change visibility**), or move to a paid plan.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Merge the restored files, then **Actions → "Deploy to GitHub Pages" → Run workflow**. After a minute or two the site is live at **https://jirayul.github.io/Samathi101/**. The comments at the top of `deploy.yml` say how to publish on every merge.
+
+**Other one-time settings** (repo admin):
+- **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request and the status check **check** (from the check bot), so nobody can merge a change that fails `npm test`. GitHub enforces rulesets on private repos only on paid plans; on the free plan, check for the green tick before merging.
+- When the registration page goes live: give the published build the live Apps Script web app URL as `PUBLIC_SHEET_API_URL` (AGENTS.md → "Google Sheet").
 
 ### Switching english.samathi101.com to GitHub Pages
 
-Do this when the team is happy with the review link. Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
+Do this once the site is published on GitHub Pages (see Hosting) and the team is happy with it. Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
 
-1. In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Open a pull request and merge it; the deploy bot publishes it.
+1. In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Open a pull request, merge it, and publish.
 2. The domain admin edits the `english` record in **Cloudflare → DNS** for samathi101.com: Type `CNAME`, Name `english`, Target `jirayul.github.io`, Proxy status **DNS only** (grey cloud). Remove the old Canva `english` records.
 3. Repo **Settings → Pages → Custom domain** shows `english.samathi101.com`. Once the DNS check passes, tick **Enforce HTTPS**.
 4. In Canva, disconnect the custom domain from the old website.
@@ -159,11 +168,11 @@ To roll back, the admin puts the old `english` record back.
 
 ## Tabs and links
 
-Each tab has its own link, so you can share a specific tab: `/#home`, `/#children`, `/#retreat`, `/#one-day`, `/#instructor`, `/#videos`, `/#contact`, `/#register`. Linking to a single course (e.g. `/#one-day-phuket`) opens the right tab and scrolls to it.
+Each tab has its own link, so you can share a specific tab: `/#home`, `/#children`, `/#retreat`, `/#one-day`, `/#instructor`, `/#contact`, `/#register`. Linking to a single course (e.g. `/#one-day-phuket`) opens the right tab and scrolls to it.
 
 ## Adding features later
 
-- **Registration page for new courses** (website → Google Sheet): the existing courses stay on Google Forms. GitHub Pages can't keep secret keys, so the page posts to a Google Apps Script web app that writes the row into the Sheet, and reads public course info the same way. How to build and test it: AGENTS.md → "Google Sheet".
+- **Registration page for new courses** (website → Google Sheet): the existing courses stay on Google Forms. A static site can't keep secret keys, so the page posts to a Google Apps Script web app that writes the row into the Sheet, and reads public course info the same way. How to build and test it: AGENTS.md → "Google Sheet".
 - **Thai / English versions:** Astro has built-in i18n routing (`/th/...`) — move text from `data/*.ts` into per-language files.
 - **Non-developers editing content:** connect a headless CMS (e.g. Decap, Sanity, Notion) that writes to the same data shape as `courses.ts`.
 - **More pages** (course detail pages, blog, gallery): add files under `src/pages/` — each file becomes a URL.

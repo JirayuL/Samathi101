@@ -162,8 +162,8 @@ export const courses: Course[] = [
     title: 'FREE Meditation Instructor Course (6 Months) | Thailand • Indonesia • USA',
     status: 'closed',
     images: [{ src: micVideo, alt: 'Meditation Instructor Course (MIC) Batch 3 “Tatiyo Hi-Tech” — May to October 2026' }],
-    // TODO: paste the YouTube video ID to show the real video instead of the image
-    youtubeId: '',
+    // youtube.com/watch?v=cK8O4sZIF-Q, "Thailand & Jakarta Meditation Instructor Course (MIC) Batch 3"
+    youtubeId: 'cK8O4sZIF-Q',
     paragraphs: [
       'After an amazing conclusion of Meditation Instructor Course (MIC) 2025 — with over 80 graduates from 15 countries — the Willpower Institute will offer the MIC Batch 3 in 2026. MIC is a FREE six-month English meditation instructor course, designed as a comprehensive meditation course to enable participants to teach themselves and others.',
     ],

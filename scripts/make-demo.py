@@ -1,6 +1,6 @@
 """Turn a built site (dist-demo/) into ONE self-contained HTML file for showing the client.
 
-Usage (from the repo root):  npm run demo
+Usage (from the repo root):  npm run demo   (npm run build and npm test also run it, so the demo stays current)
   = astro build --base / --outDir dist-demo  +  python3 scripts/make-demo.py dist-demo demo/samathi101-demo.html
 
 Inlines the CSS, images (largest size up to 1000px for the page, plus the large
@@ -56,10 +56,22 @@ html = re.sub(r"url\((/_astro/[^)]+)\)", lambda m: f"url({data_uri(m.group(1))})
 html = re.sub(r'href="(/_astro/[^"]+\.webp)"', lambda m: f'href="{data_uri(m.group(1))}"', html)
 # Favicons
 html = re.sub(r'href="(/favicon[^"]*\.png)"', lambda m: f'href="{data_uri(m.group(1))}"', html)
+
+# YouTube won't play an embedded video on a page opened from a file (Error 153: no referrer),
+# so the demo shows the video's thumbnail with a button that opens it on YouTube
+def youtube_sub(m):
+    vid, start = m.group(1), m.group(2)
+    url = f"https://www.youtube.com/watch?v={vid}" + (f"&amp;t={start}s" if start else "")
+    return (f'<a href="{url}" target="_blank" rel="noopener" style="position:absolute;inset:0;display:grid;'
+            f'place-items:center;background:#000 url(https://i.ytimg.com/vi/{vid}/hqdefault.jpg) center/cover no-repeat">'
+            f'<span style="padding:10px 18px;border-radius:3px;background:var(--kasaya);color:#fff;font-weight:600">'
+            f'&#9654; Watch the video on YouTube</span></a>')
+html = re.sub(r'<iframe\b[^>]*youtube-nocookie\.com/embed/([\w-]+)(?:\?start=(\d+))?[^>]*></iframe>', youtube_sub, html)
 # Leftover root-relative links that would break outside the site
 html = html.replace('href="/"', 'href="#"')
 
 leftover = re.findall(r'(?:src|href)="/(?!/)[^"]*"', html)
-print("leftover local refs:", leftover)
+if leftover:
+    sys.exit(f"Demo not written: these files would be missing in it: {leftover}")
 out.write_text(html)
 print(out, round(out.stat().st_size/1024), "KB")
