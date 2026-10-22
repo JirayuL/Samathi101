@@ -10,4 +10,4 @@
 - [ ] No passwords, API keys or Google Sheet links in the code
 - [ ] Ran `npm run demo` (only if the client will review this change)
 
-Merging into `main` publishes the site automatically.
+Merging into `main` doesn't publish the site yet; publishing is by hand (AGENTS.md → "Publishing and rollback").

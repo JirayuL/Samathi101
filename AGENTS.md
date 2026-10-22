@@ -4,14 +4,15 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 
 ## What this is
 
-- The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**. Until the domain switch it lives at **https://jirayul.github.io/Samathi101/**.
-- A static site built with **Astro** and hosted free on **GitHub Pages**. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Videos, Contact Us, Register.
+- The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
+- **Not published yet.** The repo is private (collaborators only), and the client sees the site through the single-file demo. README → "Hosting" covers what publishing needs.
+- A static site built with **Astro**, ready to host free on **GitHub Pages**. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Videos, Contact Us, Register.
 - Data that people send or that changes often (registrations, later live course info) goes to a **Google Sheet** through a Google Apps Script web app. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
 
 ## Set up
 
-Needs Node.js 22.22 or newer (the bots use the version in `.node-version`, 24), and Python 3 for the helper scripts (on Windows it may be called `py`). Ask Gear (JirayuL) to add you to the GitHub repo.
+Needs Node.js 22.22 or newer (the bots use the version in `.node-version`, 24), and Python 3 for the helper scripts (on Windows it may be called `py`). The repo is private: ask Gear (JirayuL) to add you as a collaborator.
 
 ```bash
 git clone git@github.com:JirayuL/Samathi101.git
@@ -51,7 +52,7 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 ## Rules
 
 1. **Existing courses keep their Google Forms.** Do not change those registration links unless the foundation asks. Only the **new course** gets the on-site registration page (website → Google Sheet).
-2. **No secrets in the repo.** It is public for GitHub Pages: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which is public by design.
+2. **No secrets in the repo.** It is private now, but free GitHub Pages hosting would make it public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which is public by design.
 3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them, and don't add tracking (Pixel, Analytics) without a consent banner.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
 5. **Images go in `src/assets/`** with a real `alt` text, so Astro optimizes them. Use `public/` only for files served as-is (favicon, CNAME).
@@ -66,22 +67,23 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 
 ## Demo
 
-- **Review link:** https://jirayul.github.io/Samathi101/ always shows `main`. The deploy bot updates it a minute or two after each merge.
-- **Single file**, for a change that isn't merged yet or for people who can't open the link: `npm run demo`, then send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except YouTube and the Google Sheet. It's a snapshot: run it again after changes and commit it with them.
+- **Single file:** `npm run demo`, then send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except YouTube and the Google Sheet. It's a snapshot: run it again after changes and commit it with them. While the site isn't published, this is how the client sees it.
+- **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
+- **Review link** (once the site is published): https://jirayul.github.io/Samathi101/, which always shows `main`.
 - Demos of the Google Sheet features use the **test** Sheet (below), never the live one.
 
-## Deploying and rollback (automatic)
+## Publishing and rollback
 
-Merging a pull request into `main` publishes the site. Watch it under GitHub → **Actions** → "Deploy to GitHub Pages". The bot runs four steps:
+The site isn't published yet, so the deploy bot (`deploy.yml`) runs **only by hand**, and only works once hosting is set up (README → "Hosting"). Then run it from GitHub → **Actions** → "Deploy to GitHub Pages" → Run workflow. To publish on every merge into `main` instead, remove the two `#` before `push:` at the top of `deploy.yml`. The bot runs four steps:
 
 1. **build**: `npm test`. If it fails, nothing is published and the live site keeps the previous version.
 2. **deploy**: publishes the build to GitHub Pages.
 3. **verify**: `scripts/smoke-test.py` on the live URL.
 4. **rollback**: only if verify fails. It rebuilds the last version that passed, publishes it and checks it again.
 
-A failed run is red, and GitHub emails whoever pushed. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it.
+A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it.
 
-Pull requests get the check bot (`check.yml`), which runs the same `npm test`, so a red X shows up before anything is merged. To publish again without a new commit (for example after changing a repo variable): Actions → "Deploy to GitHub Pages" → Run workflow. To move to english.samathi101.com, follow README → "Switching english.samathi101.com to GitHub Pages".
+Pull requests get the check bot (`check.yml`), which runs the same `npm test`, so a red X shows up before anything is merged. It takes about a minute, well inside the free Actions minutes a private repo gets each month. To move to english.samathi101.com, follow README → "Switching english.samathi101.com to GitHub Pages".
 
 ## Google Sheet (read and write)
 
@@ -131,6 +133,8 @@ Content to confirm with the foundation:
 - Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 
 Design (needs approval, rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under 4.5:1. It is used for tab labels, the Register tab summaries and small labels.
+
+Hosting: decide how and when to publish (README → "Hosting"). Until then the site is private and shown with the single-file demo.
 
 ## Planned work
 

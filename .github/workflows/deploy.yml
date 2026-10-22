@@ -1,17 +1,20 @@
-# The deploy bot. On every push to main it:
+# The deploy bot. When it runs it:
 #   1. build     builds the site and runs the link check (npm test).
 #                If this fails, nothing is published: the live site stays as it was.
 #   2. deploy    publishes the checked build to GitHub Pages.
 #   3. verify    checks the live site (scripts/smoke-test.py): the page, every tab, every file loads.
 #   4. rollback  only if verify fails: rebuilds the last version that passed and publishes it again.
-# A failed run shows a red X in the Actions tab, and GitHub emails whoever pushed.
-# Run it by hand: Actions -> "Deploy to GitHub Pages" -> Run workflow.
+# A failed run shows a red X in the Actions tab, and GitHub emails whoever started it.
+#
+# The site is not published yet (the repo is private; see README -> Hosting), so for now the bot
+# runs only by hand: Actions -> "Deploy to GitHub Pages" -> Run workflow.
+# To deploy on every merge to main once hosting is set up, remove the two # below.
 # https://docs.astro.build/en/guides/deploy/github/
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 permissions:

@@ -11,20 +11,19 @@ Landing page rebuilt from the Canva design, using [Astro](https://astro.build).
 ## How it fits together
 
 ```
-GitHub repo (main) ── deploy bot ──▶ GitHub Pages: the site (static, free)
+GitHub repo (private) ── deploy bot ──▶ GitHub Pages: the site (static; not published yet)
                                             │  fetch: read course info, send registrations
                                             ▼
                                      Google Apps Script web app ──▶ Google Sheet (private)
 ```
 
-- **GitHub** keeps the code. Every merge into `main` is checked, published and checked again on the live site; if the live check fails, the last good version goes back up automatically (see Hosting).
-- **GitHub Pages** serves the site for free. It can't keep secrets, so the site holds no keys.
+- **GitHub** keeps the code in a private repo that only collaborators can see. The check bot tests every pull request. The deploy bot checks, publishes and re-checks the live site, rolling back if that fails; it runs by hand until the site is published (see Hosting).
+- **GitHub Pages** is where the site is meant to be served for free. It can't keep secrets, so the site holds no keys.
 - **Google Apps Script + Google Sheet** store what the site reads and writes. The script runs as the foundation's Google account; the Sheet stays private. Setup and rules: AGENTS.md → "Google Sheet".
 
 ## Demo for the client
 
-- **Review link:** https://jirayul.github.io/Samathi101/ shows the current `main` and updates itself after every merge.
-- **Single file:** `demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the YouTube video and the Google Sheet. It is a snapshot: run `npm run demo` to regenerate it after changes. Use it to show a change before it is merged.
+`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the YouTube video and the Google Sheet. It is a snapshot: run `npm run demo` to regenerate it after changes. While the site isn't published, this is how the client sees it.
 
 ## Run it locally
 
@@ -71,7 +70,7 @@ scripts/
   make-demo.py        ← builds the single-file demo (npm run demo)
 demo/                 ← the single-file demo for the client
 .github/
-  workflows/deploy.yml   ← deploy bot: check, publish, check the live site, roll back if needed
+  workflows/deploy.yml   ← deploy bot: check, publish, check the live site, roll back if needed (run by hand for now)
   workflows/check.yml    ← check bot: runs npm test on every pull request
   pull_request_template.md ← the pre-push checklist, shown on every pull request
 .env.example          ← settings for your own computer (copy to .env); the Google Sheet test URL
@@ -127,30 +126,41 @@ Each Register button appears twice, on its course tab and on the Register tab, a
 
 Content still to fill in (videos, fees, dates) is listed in AGENTS.md → "Open items".
 
-## Hosting: GitHub Pages (free)
+## Hosting (not published yet)
 
-**Updating the site:** open a pull request; the check bot (`.github/workflows/check.yml`) runs `npm test` on it. Merge it into `main` and the deploy bot (`.github/workflows/deploy.yml`) takes over:
+The repo is **private**: only its collaborators (**Settings → Collaborators**) can see the code. The site isn't published anywhere yet; the client sees it through the single-file demo.
+
+**Every change:** open a pull request; the check bot (`.github/workflows/check.yml`) runs `npm test` on it. Merging into `main` doesn't publish anything yet.
+
+**When the foundation is ready to publish**, the hosting choice depends on whether the repo stays private:
+
+- **GitHub Pages** (what the deploy bot is built for) is free only for **public** repos. A private repo needs a paid GitHub plan, and even then the published site is public. Nothing secret is in this repo, so making it public is safe, but then anyone can read the code.
+- To keep the repo private at zero cost, use a host that builds from private repos on a free plan, such as **Cloudflare Pages**. samathi101.com's DNS is already on Cloudflare. The deploy bot's publish steps would then need rewriting for that host.
+
+**Publishing on GitHub Pages** (repo admin, once):
+1. Make the repo public (**Settings → General → Danger Zone → Change visibility**), or move to a paid plan.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Run the deploy bot: **Actions → "Deploy to GitHub Pages" → Run workflow**. After a minute or two the site is live at **https://jirayul.github.io/Samathi101/**.
+4. To publish on every merge from then on, remove the two `#` before `push:` at the top of `.github/workflows/deploy.yml`.
+
+What the deploy bot does each run:
 
 1. Builds the site and runs `npm test`. If that fails, nothing is published: the live site keeps the previous version.
 2. Publishes to GitHub Pages.
 3. Checks the live site with `scripts/smoke-test.py`: the page, every tab, every image, font and stylesheet.
 4. If that check fails, rebuilds the last version that passed, publishes it again and re-checks it (automatic rollback).
 
-Any failure turns the run red in the **Actions** tab, and GitHub emails whoever pushed. The bot can also be run by hand: Actions → "Deploy to GitHub Pages" → Run workflow.
+Any failure turns the run red in the **Actions** tab, and GitHub emails whoever started it.
 
-**One-time setup** (repo admin)
-1. GitHub Pages is free only for **public** repositories (private needs a paid GitHub plan). Repo **Settings → General → Danger Zone → Change visibility → Public**. Nothing secret is in this repo; never commit passwords or API keys.
-2. Repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Repo **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request, and require the status check **check** (from the check bot) to pass. Then nobody can merge a change that fails `npm test`.
-4. Add volunteers under **Settings → Collaborators**.
-5. When the registration page goes live: **Settings → Secrets and variables → Actions → Variables → New repository variable** `PUBLIC_SHEET_API_URL` = the live Apps Script web app URL, then run the deploy bot by hand.
-6. Merge to `main` (or run the bot by hand). After a minute or two the site is live at **https://jirayul.github.io/Samathi101/**.
+**Other one-time settings** (repo admin):
+- **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request and the status check **check** (from the check bot), so nobody can merge a change that fails `npm test`. GitHub enforces rulesets on private repos only on paid plans; on the free plan, check for the green tick before merging.
+- When the registration page goes live: **Settings → Secrets and variables → Actions → Variables → New repository variable** `PUBLIC_SHEET_API_URL` = the live Apps Script web app URL.
 
 ### Switching english.samathi101.com to GitHub Pages
 
-Do this when the team is happy with the review link. Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
+Do this once the site is published (see Hosting) and the team is happy with the review link. Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
 
-1. In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Open a pull request and merge it; the deploy bot publishes it.
+1. In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Open a pull request and merge it, then run the deploy bot (or let it run, if publishing on every merge is on).
 2. The domain admin edits the `english` record in **Cloudflare → DNS** for samathi101.com: Type `CNAME`, Name `english`, Target `jirayul.github.io`, Proxy status **DNS only** (grey cloud). Remove the old Canva `english` records.
 3. Repo **Settings → Pages → Custom domain** shows `english.samathi101.com`. Once the DNS check passes, tick **Enforce HTTPS**.
 4. In Canva, disconnect the custom domain from the old website.
