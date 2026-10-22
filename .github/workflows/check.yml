@@ -1,0 +1,23 @@
+# The check bot. On every pull request it builds the site and runs the link check (npm test),
+# the same check the deploy bot runs before publishing. A red X means the change would not deploy.
+name: Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Build and check links
+        run: npm test

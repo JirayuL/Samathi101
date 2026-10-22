@@ -5,6 +5,7 @@ dist/
 .netlify/
 .env
 .env.*
+!.env.example
 .DS_Store
 
 # local demo build
