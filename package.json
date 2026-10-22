@@ -1,0 +1,26 @@
+{
+  "name": "samathi101-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Willpower Institute English meditation courses landing page (english.samathi101.com)",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "astro build && python3 scripts/check-links.py dist/index.html",
+    "check-links": "python3 scripts/check-links.py dist/index.html",
+    "smoke-test": "python3 scripts/smoke-test.py",
+    "demo": "astro build --base / --outDir dist-demo && python3 scripts/make-demo.py dist-demo demo/samathi101-demo.html",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@fontsource/sarabun": "^5.3.0",
+    "@fontsource/taviraj": "^5.3.0",
+    "astro": "^7.4.0",
+    "sharp": "^0.35.5"
+  }
+}
