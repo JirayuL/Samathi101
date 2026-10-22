@@ -25,6 +25,19 @@ GitHub repo (private) ── deploy bot ──▶ GitHub Pages: the site (static
 
 `demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. While the site isn't published, this is how the client sees it.
 
+## Open items (22 Oct 2026)
+
+The same list is in AGENTS.md → "Open items"; when you finish or add one, update both.
+
+Content to confirm with the foundation:
+
+- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
+- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
+
+Design (needs approval, AGENTS.md rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under the 4.5:1 minimum for readable text. It is used for tab labels, the Register tab summaries and small labels.
+
+Hosting: decide how and when to publish (see Hosting below). Until then the site is private and shown with the single-file demo.
+
 ## Run it locally
 
 Requires Node.js 22.22 or newer (24 recommended, as in `.node-version`) and Python 3.
@@ -122,7 +135,7 @@ The existing courses keep their **Google Forms** (same links as the old Canva si
 
 Each Register button appears twice, on its course tab and on the Register tab, and both read the same entry in `courses.ts`.
 
-Content still to confirm (fees, dates) is listed in AGENTS.md → "Open items".
+Content still to confirm is listed under "Open items" above.
 
 ## Hosting (not published yet)
 

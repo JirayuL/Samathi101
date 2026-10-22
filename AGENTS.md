@@ -126,6 +126,8 @@ Work on a branch and open a pull request into `main`; the pull request template 
 
 ## Open items (22 Oct 2026)
 
+The same list is in README → "Open items"; when you finish or add one, update both.
+
 Content to confirm with the foundation:
 
 - The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
