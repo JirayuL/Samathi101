@@ -2,13 +2,15 @@
 
 Landing page rebuilt from the Canva design, using [Astro](https://astro.build).
 
+**Working on the site? Start with [AGENTS.md](AGENTS.md)**: setup, where to edit, rules and the pre-push checklist.
+
 **Why Astro:** pages are plain HTML + CSS components (easy to read and edit), the output is a static site that GitHub Pages hosts for free (see Hosting below), images are optimized automatically, and when you need server features later (forms, Thai language, a CMS, a database) Astro supports them without switching frameworks.
 
 ---
 
 ## Demo for the client
 
-`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the YouTube video. It is a snapshot, so regenerate it after changes.
+`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the YouTube video. It is a snapshot: run `npm run demo` to regenerate it after changes.
 
 ## Run it locally
 
