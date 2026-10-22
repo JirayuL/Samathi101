@@ -6,7 +6,7 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
 - **Not published yet.** The repo is private (collaborators only), and the client sees the site through the single-file demo. README → "Hosting" covers what publishing needs.
-- A static site built with **Astro**, ready to host free on **GitHub Pages**. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Videos, Contact Us, Register.
+- A static site built with **Astro**, ready to host free on **GitHub Pages**. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Contact Us, Register.
 - Data that people send or that changes often (registrations, later live course info) goes to a **Google Sheet** through a Google Apps Script web app. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
 
@@ -24,11 +24,11 @@ npm run dev            # http://localhost:4321/Samathi101/, reloads as you edit
 | Command | What it does |
 |---|---|
 | `npm run dev` | Local preview while editing |
-| `npm test` | Builds the site into `dist/`, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
+| `npm test` | Builds the site into `dist/` and updates the demo, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
 | `npm run preview` | Serves the built `dist/` at http://localhost:4321/Samathi101/, the way GitHub Pages will |
 | `npm run smoke-test -- <url>` | Checks a running copy of the site: the page, every tab and every file it uses load. The deploy bot runs it on the live site |
-| `npm run demo` | Makes `demo/samathi101-demo.html`, the whole site in one file for showing the client |
-| `npm run build` / `npm run check-links` | The two halves of `npm test`, if you need one alone |
+| `npm run build` | Builds the site into `dist/` and updates `demo/samathi101-demo.html`, the whole site in one file for showing the client |
+| `npm run demo` / `npm run check-links` | Only the demo, or only the link check |
 
 Using Claude Code? `.claude/launch.json` has the `dev` and `preview` servers ready for the preview pane.
 
@@ -40,7 +40,7 @@ Content lives in `src/data/`. Components only lay it out, so most edits never to
 |---|---|
 | A course's text, dates, fees, buttons, status | `src/data/courses.ts` |
 | Tab names and order | `src/data/tabs.ts` |
-| Videos on the Videos tab | `src/data/videos.ts` (YouTube ID + optional start second) |
+| A course's video | `youtubeId` of that course in `src/data/courses.ts` (the part after `watch?v=`); it replaces the course's images |
 | Hero text, quote, contact details | `src/data/site.ts` |
 | Colors, fonts, spacing | `src/styles/global.css` (`:root` variables) |
 | A course image | Put it in `src/assets/courses/`, import it at the top of `courses.ts` |
@@ -67,7 +67,7 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 
 ## Demo
 
-- **Single file:** `npm run demo`, then send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except YouTube and the Google Sheet. It's a snapshot: run it again after changes and commit it with them. While the site isn't published, this is how the client sees it.
+- **Single file:** send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except the Google Sheet and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` updates the demo, so commit it with every change. While the site isn't published, this is how the client sees it.
 - **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
 - **Review link** (once the site is published): https://jirayul.github.io/Samathi101/, which always shows `main`.
 - Demos of the Google Sheet features use the **test** Sheet (below), never the live one.
@@ -112,6 +112,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 | Port 4321 is busy | Astro picks the next free port; open the URL it prints |
 | `npm warn EBADENGINE` | Node is too old: install Node 24 (or 22.22 or newer) |
 | `python3: command not found` (Windows) | Install Python 3, or run the script with `py scripts/...` |
+| `Demo not written: these files would be missing in it` | Something links a file with a path starting with `/`. Put images in `src/assets/` and import them, or use `import.meta.env.BASE_URL` (rule 6) |
 | A deploy run is red | Actions → open the run. Red **build**: the live site didn't change; fix and merge again. Red **verify** with green **rollback**: the previous version is back; read the verify log, then revert or fix |
 
 ## Before you push
@@ -119,7 +120,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - [ ] `npm test` passes, and every Register button goes to the right form
 - [ ] You looked at the changed tab at desktop width and at phone width (375px)
 - [ ] No passwords, API keys or Google Sheet links in the code
-- [ ] `npm run demo`, committed with the change, if the client will review it
+- [ ] The updated `demo/samathi101-demo.html` is committed with the change (`npm test` regenerates it)
 
 Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review.
 
@@ -127,8 +128,6 @@ Work on a branch and open a pull request into `main`; the pull request template 
 
 Content to confirm with the foundation:
 
-- The Videos tab shows a placeholder: a Google developer demo video (`M7lc1UVf-VE`) titled "Featured video" in `src/data/videos.ts`.
-- The MIC video ID (`youtubeId` in `courses.ts`) is empty, so the Instructor Course shows the poster image.
 - The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
 - Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 

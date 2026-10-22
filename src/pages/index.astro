@@ -8,7 +8,6 @@ import Divider from '../components/Divider.astro';
 import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
 import Register from '../components/Register.astro';
-import Videos from '../components/Videos.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { courses } from '../data/courses';
@@ -36,8 +35,6 @@ import { tabs } from '../data/tabs';
             <Contact />
           ) : t.id === 'register' ? (
             <Register />
-          ) : t.id === 'videos' ? (
-            <Videos />
           ) : (
             courses
               .filter((c) => c.tab === t.id)
@@ -67,8 +64,7 @@ import { tabs } from '../data/tabs';
   }
   .panel--home,
   .panel--contact,
-  .panel--register,
-  .panel--videos {
+  .panel--register {
     padding-block: 0;
   }
 </style>
