@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Tabs from '../components/Tabs.astro';
+import CourseSection from '../components/CourseSection.astro';
+import Divider from '../components/Divider.astro';
+import About from '../components/About.astro';
+import Contact from '../components/Contact.astro';
+import Register from '../components/Register.astro';
+import Videos from '../components/Videos.astro';
+import Footer from '../components/Footer.astro';
+import Lightbox from '../components/Lightbox.astro';
+import { courses } from '../data/courses';
+import { tabs } from '../data/tabs';
+---
+
+<Base>
+  <Header />
+  <Tabs tabs={tabs} />
+  <main class="panels">
+    {
+      tabs.map((t, i) => (
+        <div
+          role="tabpanel"
+          id={t.id}
+          aria-labelledby={`tab-${t.id}`}
+          class:list={['panel', `panel--${t.id}`, i === 0 && 'is-active']}
+        >
+          {t.id === 'home' ? (
+            <>
+              <Hero />
+              <About />
+            </>
+          ) : t.id === 'contact' ? (
+            <Contact />
+          ) : t.id === 'register' ? (
+            <Register />
+          ) : t.id === 'videos' ? (
+            <Videos />
+          ) : (
+            courses
+              .filter((c) => c.tab === t.id)
+              .map((c, n) => (
+                <>
+                  {n > 0 && <Divider />}
+                  <CourseSection course={c} />
+                </>
+              ))
+          )}
+        </div>
+      ))
+    }
+  </main>
+  <Footer />
+  <Lightbox />
+</Base>
+
+<style>
+  /* With JavaScript on, only the active tab's panel is shown */
+  :global(.js) .panel:not(.is-active) {
+    display: none;
+  }
+  .panel {
+    scroll-margin-top: 64px;
+    padding-block: 0 clamp(32px, 5vw, 64px);
+  }
+  .panel--home,
+  .panel--contact,
+  .panel--register,
+  .panel--videos {
+    padding-block: 0;
+  }
+</style>

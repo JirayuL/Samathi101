@@ -1,0 +1,162 @@
+---
+/**
+ * Register tab: every course in one list, open ones first, built from courses.ts.
+ * Later this is where an on-site registration form (saving to a database) can live.
+ */
+import { courses, type Status } from '../data/courses';
+import { tabs } from '../data/tabs';
+import Button from './Button.astro';
+
+const tabOrder = tabs.map((t) => t.id as string);
+const statusOrder: Record<Status, number> = { open: 0, 'coming-soon': 1, closed: 2 };
+const statusLabel: Record<Status, string> = {
+  open: 'Open for registration',
+  'coming-soon': 'Coming soon',
+  closed: 'Registration closed',
+};
+
+const list = [...courses].sort(
+  (a, b) => statusOrder[a.status] - statusOrder[b.status] || tabOrder.indexOf(a.tab) - tabOrder.indexOf(b.tab)
+);
+---
+
+<section class="register">
+  <div class="container">
+    <div class="section-head">
+      <h2>Register for a course</h2>
+      <p>
+        All meditation training is free of charge. Our instructors volunteer their time. The 7-Day Retreat fee covers
+        accommodation, meals and transport only.
+      </p>
+    </div>
+
+    <ul class="list">
+      {
+        list.map((c) => {
+          const buttons = (c.buttons ?? []).filter((b) => b.kind !== 'download');
+          return (
+            <li class:list={['entry', `entry--${c.status}`]}>
+              <div class="entry__info">
+                <p class:list={['entry__status', `entry__status--${c.status}`]}>{statusLabel[c.status]}</p>
+                <h3 class="entry__title">
+                  <a href={`#${c.id}`}>{c.title}</a>
+                </h3>
+                {c.summary && (
+                  <ul class="entry__summary">
+                    {c.summary.map((line) => (
+                      <li>{line}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div class="entry__actions">
+                {c.status === 'open' ? (
+                  buttons.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} />)
+                ) : (
+                  <a class="entry__more" href={`#${c.id}`}>
+                    Read about this course
+                  </a>
+                )}
+              </div>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <p class="help">
+      Questions about registering? Email <a href="mailto:wif.meditation@gmail.com">wif.meditation@gmail.com</a> or
+      message us on Line at <a href="https://lin.ee/j0y9jZc" target="_blank" rel="noopener">@willpower.fls</a>.
+    </p>
+  </div>
+</section>
+
+<style>
+  .register {
+    padding-block: clamp(48px, 7vw, 88px) var(--section-gap);
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 980px;
+    border-top: 1px solid var(--rule);
+  }
+  .entry {
+    display: grid;
+    gap: 18px 40px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  @media (min-width: 860px) {
+    .entry {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+  }
+  .entry__status {
+    margin: 0 0 4px;
+    font-size: 14.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* small petal mark in the status color */
+  .entry__status::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 0 70% 0 70%;
+    transform: rotate(-45deg);
+    background: currentColor;
+  }
+  .entry__status--open {
+    color: var(--kasaya);
+  }
+  .entry__status--coming-soon {
+    color: var(--forest-mute);
+  }
+  .entry__status--closed {
+    color: var(--lacquer);
+  }
+  .entry__title {
+    font-size: clamp(21px, 2.4vw, 25px);
+    margin-bottom: 8px;
+  }
+  .entry__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .entry__title a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--gold);
+  }
+  .entry__summary {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 16px;
+    color: var(--forest-mute);
+    line-height: 1.6;
+  }
+  .entry--closed .entry__title,
+  .entry--coming-soon .entry__title {
+    color: var(--forest-soft);
+  }
+  .entry__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .entry__more {
+    font-weight: 500;
+  }
+  .help {
+    max-width: 980px;
+    margin: 32px auto 0;
+    text-align: center;
+    color: var(--forest-mute);
+    font-size: 16px;
+  }
+</style>

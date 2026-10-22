@@ -1,0 +1,146 @@
+/*
+ * Design tokens — "Forest & robe"
+ * Drawn from the Thai Forest tradition: forest temple green, the ochre of the
+ * forest monk's robe (kasaya), gold leaf, palm-leaf manuscripts and temple lacquer.
+ * Change colors and fonts here; components only use these variables.
+ */
+:root {
+  --forest: #1f3b2d; /* deep forest green — headings, hero, footer */
+  --forest-soft: #4b5a4f; /* body text */
+  --forest-mute: #6f7b72; /* secondary text */
+  --kasaya: #a2561a; /* robe ochre — primary actions, links */
+  --kasaya-deep: #86460f;
+  --saffron: #e2a13b; /* highlights on dark backgrounds */
+  --gold: #c39a48; /* gold leaf — ornaments and rules */
+  --gold-light: #e2c47e; /* gold on forest green */
+  --lacquer: #7a2418; /* temple lacquer red — brand name, closed notices */
+  --palm: #f4ecdb; /* palm-leaf manuscript — quiet bands */
+  --paper: #fffdf9; /* page */
+  --ivory: #fbf5e8; /* text on forest green */
+  --rule: rgba(195, 154, 72, 0.38);
+
+  --font-display: 'Taviraj', 'Georgia', serif;
+  --font-body: 'Sarabun', system-ui, sans-serif;
+
+  --container: 1120px;
+  --gutter: 16px;
+  --section-gap: clamp(64px, 9vw, 120px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--forest-soft);
+  font-family: var(--font-body);
+  font-size: 17.5px;
+  line-height: 1.75;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--kasaya);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--kasaya-deep);
+}
+:focus-visible {
+  outline: 2px solid var(--saffron);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--forest);
+  line-height: 1.22;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@media (min-width: 720px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+/* Centered heading used at the top of Register, Contact and About blocks */
+.section-head {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 40px;
+}
+.section-head h2 {
+  font-size: clamp(32px, 4.2vw, 44px);
+  margin-bottom: 14px;
+}
+.section-head p {
+  margin: 14px 0 0;
+  color: var(--forest-mute);
+}
+
+/* Petal-shaped list bullet */
+.petal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.petal-list li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 4px;
+}
+.petal-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.72em;
+  width: 7px;
+  height: 7px;
+  background: var(--gold);
+  border-radius: 0 70% 0 70%;
+  transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
