@@ -6,7 +6,7 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
 - **Not published yet.** The repo is private (collaborators only), and the client sees the site through the single-file demo. README → "Hosting" covers what publishing needs.
-- A static site built with **Astro**, ready to host free on **GitHub Pages**. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Contact Us, Register.
+- A static site built with **Astro**, so any static host can serve it. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Contact Us, Register.
 - Data that people send or that changes often (registrations, later live course info) goes to a **Google Sheet** through a Google Apps Script web app. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
 
@@ -25,8 +25,7 @@ npm run dev            # http://localhost:4321/Samathi101/, reloads as you edit
 |---|---|
 | `npm run dev` | Local preview while editing |
 | `npm test` | Builds the site into `dist/` and updates the demo, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
-| `npm run preview` | Serves the built `dist/` at http://localhost:4321/Samathi101/, the way GitHub Pages will |
-| `npm run smoke-test -- <url>` | Checks a running copy of the site: the page, every tab and every file it uses load. The deploy bot runs it on the live site |
+| `npm run preview` | Serves the built `dist/` at http://localhost:4321/Samathi101/, the way a host would |
 | `npm run build` | Builds the site into `dist/` and updates `demo/samathi101-demo.html`, the whole site in one file for showing the client |
 | `npm run demo` / `npm run check-links` | Only the demo, or only the link check |
 
@@ -44,8 +43,8 @@ Content lives in `src/data/`. Components only lay it out, so most edits never to
 | Hero text, quote, contact details | `src/data/site.ts` |
 | Colors, fonts, spacing | `src/styles/global.css` (`:root` variables) |
 | A course image | Put it in `src/assets/courses/`, import it at the top of `courses.ts` |
-| What the bots check | `scripts/check-links.py`, `scripts/smoke-test.py` |
-| The bots themselves | `.github/workflows/deploy.yml` (publish), `.github/workflows/check.yml` (pull requests) |
+| What the check bot checks | `scripts/check-links.py` |
+| The check bot itself | `.github/workflows/check.yml` |
 
 Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it automatically. Each course's Register button shows on its own tab and on the Register tab, both from the same entry, so one edit changes both.
 
@@ -63,33 +62,27 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 
 1. **`npm test`.** It must end with `Placeholder buttons (href="#"): none` and `In-page links with no target: none`. In the "External links" list, each Register button appears twice (its course tab and `register`) with the right form; README → "Registration links" has the list.
 2. **Look at what you changed**, in `npm run dev`, at desktop width and at phone width. In Chrome: DevTools (F12, or Cmd+Option+I on a Mac), then the device toolbar (Ctrl+Shift+M / Cmd+Shift+M), then iPhone SE (375px); also try 320px. Check that nothing scrolls sideways, the tab bar shows the active tab, buttons are easy to tap, and the Register buttons open the right form.
-3. **Changed images, fonts, paths or `astro.config.mjs`?** Also run `npm test && npm run preview`, then in a second terminal `npm run smoke-test -- http://localhost:4321/Samathi101/`. This is the same check the bot runs on the live site.
+3. **Changed images, fonts, paths or `astro.config.mjs`?** Also run `npm test && npm run preview`, look at the built site at http://localhost:4321/Samathi101/, and open `demo/samathi101-demo.html`: images, fonts and links must work in both.
 
 ## Demo
 
 - **Single file:** send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except the Google Sheet and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` updates the demo, so commit it with every change. While the site isn't published, this is how the client sees it.
 - **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
-- **Review link** (once the site is published): https://jirayul.github.io/Samathi101/, which always shows `main`.
 - Demos of the Google Sheet features use the **test** Sheet (below), never the live one.
 
-## Publishing and rollback
+## Publishing (not set up yet)
 
-The site isn't published yet, so the deploy bot (`deploy.yml`) runs **only by hand**, and only works once hosting is set up (README → "Hosting"). Then run it from GitHub → **Actions** → "Deploy to GitHub Pages" → Run workflow. To publish on every merge into `main` instead, remove the two `#` before `push:` at the top of `deploy.yml`. The bot runs four steps:
+Nothing is published while we wait for the client's new course and content, and there is no deploy bot for now. Merging into `main` only runs the check bot.
 
-1. **build**: `npm test`. If it fails, nothing is published and the live site keeps the previous version.
-2. **deploy**: publishes the build to GitHub Pages.
-3. **verify**: `scripts/smoke-test.py` on the live URL.
-4. **rollback**: only if verify fails. It rebuilds the last version that passed, publishes it and checks it again.
+Pull requests get the check bot (`check.yml`), which runs `npm test`, so a red X shows up before anything is merged. It takes about a minute, well inside the free Actions minutes a private repo gets each month.
 
-A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it.
-
-Pull requests get the check bot (`check.yml`), which runs the same `npm test`, so a red X shows up before anything is merged. It takes about a minute, well inside the free Actions minutes a private repo gets each month. To move to english.samathi101.com, follow README → "Switching english.samathi101.com to GitHub Pages".
+When it's time to publish, README → "Hosting" lists the choices. A GitHub Pages deploy bot was written and then removed for now: it builds and runs `npm test`, publishes, checks the live site, and republishes the last version that passed if that check fails. To bring it back: `git fetch origin pull/1/head`, then `git checkout 8b2f262 -- .github/workflows/deploy.yml scripts/smoke-test.py`.
 
 ## Google Sheet (read and write)
 
 ```
 visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Google Sheet (private)
-(page on GitHub Pages) ◀─ JSON ─  (runs as the foundation's Google account)
+(the published page)  ◀─ JSON ─  (runs as the foundation's Google account)
 ```
 
 - The Sheet stays private, shared only with the people who handle registrations. The page holds no key: it calls the web app URL, and the script reads or writes the Sheet as the foundation's account.
@@ -100,8 +93,8 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - **Deploy settings:** Deploy → New deployment → Web app, "Execute as: Me" (the foundation account), "Who has access: Anyone".
 - **Test and live copies.** Keep a test Sheet with its own script deployment for development and demos, next to the live one. The page reads the URL from `PUBLIC_SHEET_API_URL`:
   - on your computer: copy `.env.example` to `.env` and put the **test** URL in it (`.env` is never committed);
-  - for the deploy bot: the **live** URL in GitHub → Settings → Secrets and variables → Actions → **Variables** → `PUBLIC_SHEET_API_URL`.
-- **Updating the script:** Deploy → Manage deployments → edit (pencil) → Version: New version. This keeps the same URL. "New deployment" creates a new URL, which then has to be updated in `.env` and in the repo variable.
+  - for the published site: the **live** URL as a build setting on the host that publishes it (with a GitHub Actions deploy: Settings → Secrets and variables → Actions → **Variables** → `PUBLIC_SHEET_API_URL`).
+- **Updating the script:** Deploy → Manage deployments → edit (pencil) → Version: New version. This keeps the same URL. "New deployment" creates a new URL, which then has to be updated in `.env` and in the live build setting.
 
 ## Troubleshooting
 
@@ -113,7 +106,6 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 | `npm warn EBADENGINE` | Node is too old: install Node 24 (or 22.22 or newer) |
 | `python3: command not found` (Windows) | Install Python 3, or run the script with `py scripts/...` |
 | `Demo not written: these files would be missing in it` | Something links a file with a path starting with `/`. Put images in `src/assets/` and import them, or use `import.meta.env.BASE_URL` (rule 6) |
-| A deploy run is red | Actions → open the run. Red **build**: the live site didn't change; fix and merge again. Red **verify** with green **rollback**: the previous version is back; read the verify log, then revert or fix |
 
 ## Before you push
 

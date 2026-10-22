@@ -10,4 +10,4 @@
 - [ ] No passwords, API keys or Google Sheet links in the code
 - [ ] The updated `demo/samathi101-demo.html` is committed (`npm test` regenerates it)
 
-Merging into `main` doesn't publish the site yet; publishing is by hand (AGENTS.md → "Publishing and rollback").
+Merging into `main` doesn't publish anything yet (AGENTS.md → "Publishing").
