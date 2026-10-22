@@ -1,0 +1,85 @@
+---
+import type { ButtonStyle } from '../data/courses';
+
+interface Props {
+  href?: string;
+  label: string;
+  sub?: string;
+  style?: ButtonStyle;
+  disabled?: boolean;
+}
+
+const { href = '#', label, sub, style = 'primary', disabled = false } = Astro.props;
+const external = /^https?:\/\//.test(href);
+---
+
+{
+  disabled ? (
+    <span class:list={['btn', 'btn--muted']} aria-disabled="true">
+      <span class="btn__label">{label}</span>
+      {sub && <span class="btn__sub">{sub}</span>}
+    </span>
+  ) : (
+    <a class:list={['btn', `btn--${style}`]} href={href} {...(external ? { target: '_blank', rel: 'noopener' } : {})}>
+      <span class="btn__label">{label}</span>
+      {sub && <span class="btn__sub">{sub}</span>}
+    </a>
+  )
+}
+
+<style>
+  .btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 168px;
+    min-height: 54px;
+    padding: 9px 22px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    text-decoration: none;
+    text-align: center;
+    line-height: 1.2;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .btn__label {
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .btn__sub {
+    font-size: 13.5px;
+    opacity: 0.88;
+  }
+  .btn--primary {
+    background: var(--kasaya);
+    color: #fff;
+  }
+  .btn--primary:hover {
+    background: var(--kasaya-deep);
+    color: #fff;
+  }
+  .btn--secondary {
+    background: var(--forest);
+    color: var(--ivory);
+  }
+  .btn--secondary:hover {
+    background: #16301f;
+    color: var(--ivory);
+  }
+  .btn--outline {
+    background: transparent;
+    color: var(--forest);
+    border-color: var(--gold);
+  }
+  .btn--outline:hover {
+    background: var(--palm);
+    color: var(--forest);
+  }
+  .btn--muted {
+    background: transparent;
+    color: var(--forest-mute);
+    border: 1px dashed rgba(111, 123, 114, 0.6);
+    cursor: default;
+  }
+</style>

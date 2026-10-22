@@ -1,0 +1,30 @@
+---
+/** Small gold lotus between two hairlines — marks a break between sections. */
+import Lotus from './Lotus.astro';
+---
+
+<div class="divider" role="presentation">
+  <span class="divider__line"></span>
+  <Lotus size="small" />
+  <span class="divider__line"></span>
+</div>
+
+<style>
+  .divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--gold);
+    max-width: 360px;
+    margin-inline: auto;
+  }
+  .divider__line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rule));
+  }
+  .divider__line:last-child {
+    background: linear-gradient(90deg, var(--rule), transparent);
+  }
+</style>

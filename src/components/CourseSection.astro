@@ -1,0 +1,354 @@
+---
+import { Image, getImage } from 'astro:assets';
+import type { Course } from '../data/courses';
+import Button from './Button.astro';
+
+interface Props {
+  course: Course;
+}
+
+const { course } = Astro.props;
+const isExternal = (href: string) => /^https?:\/\//.test(href);
+const twoImages = !course.youtubeId && (course.images?.length ?? 0) > 1;
+
+// Large version of each image for the click-to-preview lightbox (see Lightbox.astro)
+const media = await Promise.all(
+  (course.images ?? []).map(async (img) => ({
+    ...img,
+    full: await getImage({ src: img.src, format: 'webp', width: Math.min(img.src.width, 1800) }),
+  }))
+);
+---
+
+<section class:list={['course', twoImages && 'course--posters']} id={course.id}>
+  <div class="container course__grid">
+    <div class="course__media">
+      {
+        course.youtubeId ? (
+          <div class="mount">
+            <div class="course__video">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${course.youtubeId}`}
+                title={course.title}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              />
+            </div>
+          </div>
+        ) : (
+          media.map((img) => (
+            <a
+              class="mount zoom"
+              href={img.full.src}
+              data-lightbox={course.id}
+              data-caption={img.alt}
+              data-original={img.href}
+              aria-label={`View larger: ${img.alt}`}
+            >
+              <Image src={img.src} alt={img.alt} widths={[400, 700, 1000]} sizes="(min-width: 900px) 40vw, 100vw" />
+              <span class="zoom__hint" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                  <circle cx="10.5" cy="10.5" r="6" />
+                  <path d="M15 15l5 5M10.5 8v5M8 10.5h5" />
+                </svg>
+              </span>
+            </a>
+          ))
+        )
+      }
+    </div>
+
+    <div class="course__body">
+      {
+        course.status !== 'open' && (
+          <p class:list={['status', `status--${course.status}`]}>
+            {course.status === 'closed' ? 'Registration closed' : 'Coming soon'}
+          </p>
+        )
+      }
+      <h2 class="course__title">{course.title}</h2>
+
+      {course.paragraphs?.map((p) => <p>{p}</p>)}
+
+      {
+        course.facts && (
+          <dl class="facts">
+            {course.facts.map((f) => (
+              <div class="fact">
+                <dt>{f.label}</dt>
+                <dd>{f.value.split('\n').map((line, i) => (i === 0 ? line : [<br />, line]))}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+
+      {course.afterFacts?.map((p) => <p>{p}</p>)}
+
+      {
+        course.sections?.map((s) => (
+          <div class="course__section">
+            <h3>{s.heading}</h3>
+            {s.text && <p>{s.text}</p>}
+            {s.items && (
+              <ul class="petal-list">
+                {s.items.map((item) => <li>{item}</li>)}
+              </ul>
+            )}
+          </div>
+        ))
+      }
+
+      {
+        course.links && (
+          <ul class="doc-links">
+            {course.links.map((l) => (
+              <li>
+                <a href={l.href} target="_blank" rel="noopener">
+                  <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+                    <path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      {
+        course.status === 'closed' && course.closedNote && (
+          <p class="closed-note">
+            {course.closedNote.text[0]}{' '}
+            {course.closedNote.text.slice(1).join(' ')}
+            {course.closedNote.linkLabel && course.closedNote.linkHref && (
+              <>
+                <br />
+                <a
+                  href={course.closedNote.linkHref}
+                  {...(isExternal(course.closedNote.linkHref) ? { target: '_blank', rel: 'noopener' } : {})}
+                >
+                  {course.closedNote.linkLabel}
+                </a>
+              </>
+            )}
+          </p>
+        )
+      }
+
+      {course.enrollNote && course.status === 'open' && <p class="enroll-note">{course.enrollNote}</p>}
+
+      <div class="course__buttons">
+        {course.status === 'coming-soon' && <Button label="Dates coming soon" disabled />}
+        {
+          course.status === 'open' &&
+            course.buttons?.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} />)
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .course {
+    padding-block: clamp(36px, 5vw, 64px);
+    scroll-margin-top: 64px; /* clears the sticky tab bar */
+  }
+  .course__grid {
+    display: grid;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .course__grid {
+      grid-template-columns: 5fr 6fr;
+      gap: 80px;
+    }
+    .course__media {
+      position: sticky;
+      top: 88px;
+    }
+  }
+
+  /* Images sit in a thin gold-leaf mount, like a framed temple painting */
+  .course__media {
+    display: grid;
+    gap: 24px;
+    justify-items: center;
+  }
+  .mount {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid var(--rule);
+    box-shadow: 0 1px 0 rgba(195, 154, 72, 0.18);
+  }
+  .mount :global(img) {
+    width: 100%;
+  }
+  /* Clickable images: open in the preview lightbox */
+  .zoom {
+    position: relative;
+    cursor: zoom-in;
+    transition: border-color 0.2s ease;
+  }
+  .zoom:hover {
+    border-color: var(--gold);
+  }
+  .zoom__hint {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--ivory);
+    background: rgba(31, 59, 45, 0.78);
+    border: 1px solid rgba(226, 196, 126, 0.55);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+  .zoom:hover .zoom__hint,
+  .zoom:focus-visible .zoom__hint {
+    background: var(--forest);
+    transform: scale(1.06);
+  }
+  @media (max-width: 899px) {
+    .course--posters .zoom__hint {
+      right: 10px;
+      bottom: 10px;
+      width: 30px;
+      height: 30px;
+    }
+  }
+  /* Two portrait posters (7-day retreat): side by side on phones, stacked on desktop */
+  .course--posters .mount {
+    max-width: 340px;
+  }
+  @media (max-width: 899px) {
+    .course--posters .course__media {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .course--posters .mount {
+      padding: 5px;
+    }
+  }
+  .course__video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+  }
+  .course__video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .course__body {
+    max-width: 640px;
+  }
+  .status {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .status--closed {
+    color: var(--lacquer);
+  }
+  .status--coming-soon {
+    color: var(--forest-mute);
+  }
+  .course__title {
+    font-size: clamp(28px, 3.3vw, 38px);
+    margin-bottom: 22px;
+  }
+  .course__body p {
+    margin: 0 0 18px;
+  }
+  .course__section {
+    margin-top: 8px;
+  }
+  .course__section h3 {
+    font-size: 21px;
+    margin-bottom: 6px;
+  }
+
+  /* Key facts as a quiet ledger between gold hairlines */
+  .facts {
+    margin: 4px 0 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .fact {
+    display: grid;
+    gap: 0 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  @media (min-width: 560px) {
+    .fact {
+      grid-template-columns: 170px 1fr;
+    }
+  }
+  .fact dt {
+    color: var(--kasaya);
+    font-weight: 600;
+    font-size: 15.5px;
+    padding-top: 1px;
+  }
+  .fact dd {
+    margin: 0;
+    color: var(--forest);
+  }
+
+  .doc-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px;
+    display: grid;
+    gap: 10px;
+  }
+  .doc-links a {
+    display: inline-flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .doc-links svg {
+    flex: none;
+    margin-top: 4px;
+  }
+
+  .closed-note {
+    padding: 14px 18px;
+    background: #f9efe9;
+    border-left: 2px solid var(--lacquer);
+    color: var(--lacquer);
+  }
+  .closed-note a {
+    color: var(--lacquer);
+    font-weight: 600;
+  }
+
+  .enroll-note {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--kasaya);
+    margin-top: 6px !important;
+  }
+
+  .course__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .course__buttons:empty {
+    display: none;
+  }
+</style>

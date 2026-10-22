@@ -1,0 +1,41 @@
+---
+import Lotus from './Lotus.astro';
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container">
+    <Lotus size="small" class="footer__lotus" />
+    <p class="footer__name">Willpower Institute Foundation</p>
+    <p>Wat Dhammamongkol, Soi Sukhumvit 101, Bangkok, Thailand</p>
+    <p class="footer__small">© {year} Willpower Institute Foundation, founded by Luangphor Viriyang Sirintharo</p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--forest);
+    color: rgba(251, 245, 232, 0.72);
+    text-align: center;
+    padding-block: 48px 40px;
+    font-size: 15px;
+  }
+  .footer p {
+    margin: 0 0 4px;
+  }
+  .footer :global(.footer__lotus) {
+    margin: 0 auto 14px;
+    color: var(--gold-light);
+  }
+  .footer__name {
+    font-family: var(--font-display);
+    font-size: 21px;
+    color: var(--ivory);
+    margin-bottom: 6px !important;
+  }
+  .footer__small {
+    margin-top: 18px !important;
+    font-size: 13.5px;
+    color: rgba(251, 245, 232, 0.55);
+  }
+</style>

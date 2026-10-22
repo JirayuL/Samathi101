@@ -1,0 +1,236 @@
+---
+/**
+ * Sticky tab bar. Each tab links to a panel with the same id (e.g. #one-day),
+ * so links still work with JavaScript off — the page just shows every panel.
+ */
+interface Props {
+  tabs: readonly { id: string; label: string; highlight?: boolean }[];
+}
+
+const { tabs } = Astro.props;
+const isCta = (t: Props['tabs'][number]) => 'highlight' in t && !!t.highlight;
+// Regular tabs scroll sideways on phones; highlighted ones (Register) stay pinned on the right
+const regular = tabs.filter((t) => !isCta(t));
+const pinned = tabs.filter(isCta);
+const first = tabs[0].id;
+---
+
+<nav class="tabs" aria-label="Page sections">
+  <div class="container">
+    <div class="tabs__list" role="tablist">
+      <div class="tabs__scroll">
+        {
+          regular.map((t) => (
+            <a
+              class="tab"
+              role="tab"
+              id={`tab-${t.id}`}
+              href={`#${t.id}`}
+              aria-controls={t.id}
+              aria-selected={t.id === first ? 'true' : 'false'}
+              tabindex={t.id === first ? 0 : -1}
+            >
+              {t.label}
+            </a>
+          ))
+        }
+      </div>
+      {
+        pinned.map((t) => (
+          <a
+            class="tab tab--cta"
+            role="tab"
+            id={`tab-${t.id}`}
+            href={`#${t.id}`}
+            aria-controls={t.id}
+            aria-selected="false"
+            tabindex={-1}
+          >
+            {t.label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</nav>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('.tabs')!;
+  const list = bar.querySelector<HTMLElement>('[role="tablist"]')!;
+  const scroller = bar.querySelector<HTMLElement>('.tabs__scroll')!;
+  const tabEls = [...list.querySelectorAll<HTMLAnchorElement>('[role="tab"]')];
+  const panels = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+  const panelsWrap = panels[0]?.parentElement;
+
+  function activate(id: string) {
+    const panel = panels.find((p) => p.id === id);
+    if (!panel) return false;
+    for (const t of tabEls) {
+      const on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      if (on && scroller.contains(t)) scroller.scrollTo({ left: t.offsetLeft - scroller.offsetLeft - 16, behavior: 'smooth' });
+    }
+    for (const p of panels) p.classList.toggle('is-active', p === panel);
+    return true;
+  }
+
+  // After switching tabs, bring the start of the content up under the bar (only if we're scrolled past it)
+  function scrollToPanelsTop() {
+    if (!panelsWrap) return;
+    const y = panelsWrap.getBoundingClientRect().top + window.scrollY - bar.offsetHeight;
+    if (window.scrollY > y) window.scrollTo({ top: y });
+  }
+
+  // Resolve a #hash: either a tab id, or any element inside a panel (e.g. #one-day-phuket)
+  function go(hash: string, opts: { smooth?: boolean } = {}) {
+    const id = decodeURIComponent(hash.replace(/^#/, ''));
+    if (!id) return false;
+    if (panels.some((p) => p.id === id)) {
+      activate(id);
+      scrollToPanelsTop();
+      return true;
+    }
+    const target = document.getElementById(id);
+    const panel = target?.closest<HTMLElement>('[role="tabpanel"]');
+    if (target && panel) {
+      activate(panel.id);
+      target.scrollIntoView({ behavior: opts.smooth ? 'smooth' : 'auto' });
+      return true;
+    }
+    return false;
+  }
+
+  // In-page links (tabs and links like "Please join a 1-day course")
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+    if (!a || a.getAttribute('href') === '#') return;
+    if (go(a.hash, { smooth: true })) {
+      e.preventDefault();
+      history.pushState(null, '', a.hash);
+    }
+  });
+
+  // Arrow keys move between tabs
+  list.addEventListener('keydown', (e) => {
+    const i = tabEls.indexOf(document.activeElement as HTMLAnchorElement);
+    if (i < 0) return;
+    const next =
+      e.key === 'ArrowRight' ? (i + 1) % tabEls.length
+      : e.key === 'ArrowLeft' ? (i - 1 + tabEls.length) % tabEls.length
+      : e.key === 'Home' ? 0
+      : e.key === 'End' ? tabEls.length - 1
+      : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    tabEls[next].focus();
+    tabEls[next].click();
+  });
+
+  window.addEventListener('popstate', () => go(location.hash) || activate(panels[0].id));
+  if (location.hash) go(location.hash);
+</script>
+
+<style>
+  .tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255, 253, 249, 0.94);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .tabs__list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-inline: -8px;
+  }
+  .tabs__scroll {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs__scroll::-webkit-scrollbar {
+    display: none;
+  }
+  /* Phones: fade the right edge to hint there are more tabs */
+  @media (max-width: 999px) {
+    .tabs__scroll {
+      mask-image: linear-gradient(90deg, #000 80%, transparent);
+      -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent);
+    }
+  }
+  /* Desktop: one centered row, like a temple facade */
+  @media (min-width: 1000px) {
+    .tabs__list {
+      justify-content: center;
+      gap: 14px;
+    }
+    .tabs__scroll {
+      flex: 0 1 auto;
+    }
+  }
+  .tab {
+    position: relative;
+    flex: none;
+    padding: 15px 12px 13px;
+    font-weight: 500;
+    font-size: 15.5px;
+    color: var(--forest-mute);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+  .tab:hover {
+    color: var(--forest);
+  }
+  .tab:focus-visible {
+    outline: 2px solid var(--saffron);
+    outline-offset: -5px;
+  }
+  .tab[aria-selected='true'] {
+    color: var(--forest);
+    font-weight: 600;
+  }
+  /* active tab: a short gold-leaf bar with tapered ends */
+  .tab[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -1px;
+    width: calc(100% - 24px);
+    height: 2px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
+  }
+  /* Register is the call to action at the end of the row */
+  .tab--cta {
+    flex: none;
+    margin-right: 8px;
+    padding: 7px 16px;
+    color: #fff !important;
+    background: var(--kasaya);
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .tab--cta:hover {
+    background: var(--kasaya-deep);
+  }
+  .tab--cta[aria-selected='true'] {
+    background: var(--forest);
+  }
+  .tab--cta[aria-selected='true']::after {
+    display: none;
+  }
+  @media (min-width: 1000px) {
+    .tab {
+      padding-inline: 14px;
+    }
+  }
+</style>

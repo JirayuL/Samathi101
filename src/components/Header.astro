@@ -1,0 +1,65 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/brand/logo.png';
+import { site } from '../data/site';
+---
+
+<header class="masthead">
+  <div class="container">
+    <a class="brand" href="#home" aria-label={`${site.name} — home`}>
+      <Image src={logo} alt="" width={128} height={128} class="brand__logo" loading="eager" />
+      <span class="brand__text">
+        <span class="brand__name">{site.name}</span>
+        <span class="brand__tagline">{site.tagline}</span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<style>
+  .masthead {
+    background: var(--paper);
+    /* thin gold-leaf edge along the top */
+    border-top: 3px solid transparent;
+    border-image: linear-gradient(90deg, #a87d2c, #f1d68f 50%, #a87d2c) 1;
+  }
+  .masthead .container {
+    display: flex;
+    justify-content: center;
+    padding-block: 18px 14px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+  .brand__logo {
+    width: 52px;
+    height: 52px;
+    flex: none;
+  }
+  .brand__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+  }
+  .brand__name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(22px, 3vw, 28px);
+    color: var(--lacquer);
+    letter-spacing: 0.01em;
+  }
+  .brand__tagline {
+    font-size: 13.5px;
+    color: var(--forest-mute);
+    margin-top: 3px;
+  }
+  @media (min-width: 720px) {
+    .brand__logo {
+      width: 60px;
+      height: 60px;
+    }
+  }
+</style>

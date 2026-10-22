@@ -1,0 +1,149 @@
+---
+import { Image } from 'astro:assets';
+import somdet from '../assets/about/somdet.png';
+import Divider from './Divider.astro';
+import { site } from '../data/site';
+---
+
+<section class="founder-band" id="about-founder">
+  <div class="container founder">
+    <Image
+      src={somdet}
+      alt="Somdet Phra Nyanavajirodom (Luang Phor Viriyang Sirintharo)"
+      widths={[400, 774]}
+      sizes="(min-width: 900px) 520px, 90vw"
+      class="founder__portrait"
+    />
+    <div class="founder__text">
+      <h2 class="founder__title">
+        About Somdet Phra Nyanavajirodom
+        <span class="founder__alt">(Phra Ajarn Luangphor Viriyang Sirintharo)</span>
+      </h2>
+      <p>
+        Somdet Phra Nyanavajirodom (Luang Phor Viriyang Sirintharo) was ordained as a novice monk on October 22, 1935,
+        at the age of 15. He accompanied Phra Ajarn Kongma on meditation pilgrimages (tudong) to various places for a
+        period of eight years.
+      </p>
+      <p>
+        During that time, he was fully ordained as a monk on May 20, 1941, at the age of 20. One day, Phra Ajarn Kongma
+        led him on a pilgrimage where they met Phra Ajarn Mun Bhuridatta. Luang Phor Viriyang was chosen to serve as
+        Phra Ajarn Mun’s attendant for four years during the rains retreats and five years outside the rains retreats,
+        a total of nine years.
+      </p>
+      <p>
+        He practiced tudong and meditation alongside Phra Ajarn Mun, studying meditation and profound Dhamma. Later, he
+        disseminated this meditation knowledge to the public through the Willpower Institute, which he founded on July
+        24, 1997, at Wat Dhammamongkol.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="teaching" id="about-courses">
+  <div class="container">
+    <figure class="quote">
+      <blockquote>{site.quote}</blockquote>
+    </figure>
+    <Divider />
+    <div class="teaching__text">
+      <h2>About our meditation courses</h2>
+      <p>
+        All Meditation Courses of the Willpower Institute Foundation are based on the teachings of Somdet Phra
+        Nyanavajirodom Phra Ajarn Luang Phor Viriyang Sirintharo — the late and highly revered Thai Buddhist monk,
+        Abbot of Wat Dhammamongkol, meditation master, and founder of the Willpower Institute Foundation.
+      </p>
+      <p>
+        The meditation methods originate from the direct lineage of his teacher, Luangpu Mun Bhuridatta, a renowned
+        Vipassana meditation master in the Thai Forest monastic tradition.
+      </p>
+      <p>
+        The Willpower Institute Foundation aims to teach meditation with an emphasis on Samma-Samadhi (Right
+        Meditation). Learning meditation and accumulating mind power bring great benefits and help cultivate virtues.
+        Meditation promotes reason, responsibility, and loving-kindness. Those who practice meditation will experience
+        benefits both physically and mentally.
+      </p>
+      <p class="signature">
+        Willpower Institute Foundation<br />Luangphor Viriyang Sirintharo
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .founder-band {
+    padding-block: var(--section-gap);
+    background: var(--palm);
+  }
+  .founder {
+    display: grid;
+    gap: 36px 72px;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .founder {
+      grid-template-columns: 1fr 1fr;
+    }
+    .founder :global(.founder__portrait) {
+      position: sticky;
+      top: 96px;
+    }
+  }
+  .founder :global(.founder__portrait) {
+    width: min(520px, 100%);
+    margin-inline: auto;
+  }
+  .founder__title {
+    font-size: clamp(30px, 3.6vw, 40px);
+    margin-bottom: 24px;
+  }
+  .founder__alt {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.56em;
+    font-style: italic;
+    color: var(--kasaya);
+  }
+  .founder__text p {
+    margin: 0 0 20px;
+    max-width: 62ch;
+  }
+
+  .teaching {
+    padding-block: var(--section-gap);
+  }
+  .quote {
+    margin: 0 auto 36px;
+    max-width: 760px;
+    text-align: center;
+  }
+  .quote blockquote {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(26px, 3.6vw, 40px);
+    line-height: 1.3;
+    color: var(--forest);
+    text-wrap: balance;
+  }
+  .teaching__text {
+    max-width: 660px;
+    margin: 44px auto 0;
+  }
+  .teaching__text h2 {
+    text-align: center;
+    font-size: clamp(28px, 3.4vw, 36px);
+    margin-bottom: 24px;
+  }
+  .teaching__text p {
+    margin: 0 0 20px;
+  }
+  .signature {
+    margin-top: 30px !important;
+    text-align: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--kasaya);
+  }
+</style>

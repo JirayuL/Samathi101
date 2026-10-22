@@ -1,0 +1,247 @@
+---
+/**
+ * Full-screen image preview. Any link with data-lightbox="<group>" opens here
+ * (course posters, contact photos). Links in the same group can be flipped through.
+ * Without JavaScript the link simply opens the large image.
+ *
+ * Optional attributes on the link:
+ *   data-caption  — text under the image
+ *   data-original — URL of the original file (e.g. the brochure on Google Drive)
+ */
+---
+
+<dialog id="lightbox" class="lb" aria-label="Image preview">
+  <div class="lb__stage">
+    <button class="lb__btn lb__close" type="button" aria-label="Close preview">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+    <button class="lb__btn lb__nav lb__prev" type="button" aria-label="Previous image">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 5l-7 7 7 7"></path>
+      </svg>
+    </button>
+    <figure class="lb__figure">
+      <img class="lb__img" alt="" />
+      <figcaption class="lb__caption">
+        <span class="lb__text" aria-hidden="true"></span>
+        <span class="lb__meta">
+          <span class="lb__count"></span>
+          <a class="lb__original" target="_blank" rel="noopener">Open the original file</a>
+        </span>
+      </figcaption>
+    </figure>
+    <button class="lb__btn lb__nav lb__next" type="button" aria-label="Next image">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('lightbox') as HTMLDialogElement;
+  const img = dlg.querySelector<HTMLImageElement>('.lb__img')!;
+  const text = dlg.querySelector<HTMLElement>('.lb__text')!;
+  const count = dlg.querySelector<HTMLElement>('.lb__count')!;
+  const original = dlg.querySelector<HTMLAnchorElement>('.lb__original')!;
+  const prev = dlg.querySelector<HTMLButtonElement>('.lb__prev')!;
+  const next = dlg.querySelector<HTMLButtonElement>('.lb__next')!;
+
+  let items: HTMLAnchorElement[] = [];
+  let index = 0;
+
+  function show(n: number) {
+    index = (n + items.length) % items.length;
+    const link = items[index];
+    const caption = link.dataset.caption ?? '';
+    img.src = link.href;
+    img.alt = caption;
+    text.textContent = caption;
+    const multi = items.length > 1;
+    prev.hidden = next.hidden = count.hidden = !multi;
+    count.textContent = multi ? `${index + 1} of ${items.length}` : '';
+    if (link.dataset.original) {
+      original.href = link.dataset.original;
+      original.hidden = false;
+    } else {
+      original.hidden = true;
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-lightbox]');
+    if (!link || typeof dlg.showModal !== 'function') return;
+    e.preventDefault();
+    items = [...document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${link.dataset.lightbox}"]`)];
+    show(items.indexOf(link));
+    dlg.showModal();
+  });
+
+  prev.addEventListener('click', () => show(index - 1));
+  next.addEventListener('click', () => show(index + 1));
+  dlg.querySelector('.lb__close')!.addEventListener('click', () => dlg.close());
+
+  // Click outside the image closes the preview
+  dlg.addEventListener('click', (e) => {
+    const t = e.target as Element;
+    if (t === dlg || t.classList.contains('lb__stage') || t.classList.contains('lb__figure')) dlg.close();
+  });
+
+  dlg.addEventListener('keydown', (e) => {
+    if (items.length < 2) return;
+    if (e.key === 'ArrowLeft') show(index - 1);
+    if (e.key === 'ArrowRight') show(index + 1);
+  });
+
+  // Swipe left/right on phones
+  let startX: number | null = null;
+  dlg.addEventListener('touchstart', (e) => (startX = e.touches[0].clientX), { passive: true });
+  dlg.addEventListener('touchend', (e) => {
+    if (startX === null || items.length < 2) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) show(dx < 0 ? index + 1 : index - 1);
+    startX = null;
+  });
+
+  dlg.addEventListener('close', () => img.removeAttribute('src'));
+</script>
+
+<style>
+  .lb {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ivory);
+  }
+  .lb::backdrop {
+    background: rgba(18, 36, 27, 0.93);
+  }
+  .lb[open] {
+    animation: lb-in 0.22s ease-out;
+  }
+  @keyframes lb-in {
+    from {
+      opacity: 0;
+    }
+  }
+  :global(html:has(.lb[open])) {
+    overflow: hidden;
+  }
+
+  .lb__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 64px 16px 24px;
+  }
+  .lb__figure {
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    max-width: 100%;
+  }
+  .lb__img {
+    display: block;
+    max-width: min(100%, 1100px);
+    max-height: calc(100dvh - 170px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    background: #fff;
+    padding: 6px;
+    box-shadow: 0 0 0 1px rgba(226, 196, 126, 0.45);
+  }
+  .lb__caption {
+    max-width: 62ch;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(251, 245, 232, 0.85);
+  }
+  .lb__meta {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-top: 6px;
+    font-size: 14px;
+  }
+  .lb__count {
+    color: var(--gold-light);
+  }
+  .lb__original {
+    color: var(--gold-light);
+  }
+  .lb__original:hover {
+    color: var(--ivory);
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  .lb__btn {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(226, 196, 126, 0.5);
+    background: rgba(31, 59, 45, 0.85);
+    color: var(--ivory);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .lb__btn:hover {
+    background: var(--forest);
+  }
+  .lb__btn:focus-visible {
+    outline: 2px solid var(--saffron);
+    outline-offset: 2px;
+  }
+  .lb__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+  }
+  .lb__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+  .lb__prev {
+    left: 12px;
+  }
+  .lb__next {
+    right: 12px;
+  }
+  @media (min-width: 900px) {
+    .lb__stage {
+      padding-inline: 96px;
+    }
+    .lb__close {
+      top: 20px;
+      right: 24px;
+    }
+    .lb__prev {
+      left: 24px;
+    }
+    .lb__next {
+      right: 24px;
+    }
+  }
+</style>

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.netlify/
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# local demo build
+dist-demo/
