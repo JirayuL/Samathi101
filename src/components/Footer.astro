@@ -1,6 +1,8 @@
 ---
 import Lotus from './Lotus.astro';
 const year = new Date().getFullYear();
+// Shown by Analytics.astro when analytics is set up, to change the cookie choice
+const analytics = !!(import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '').trim();
 ---
 
 <footer class="footer">
@@ -9,6 +11,15 @@ const year = new Date().getFullYear();
     <p class="footer__name">Willpower Institute Foundation</p>
     <p>Wat Dhammamongkol, Soi Sukhumvit 101, Bangkok, Thailand</p>
     <p class="footer__small">© {year} Willpower Institute Foundation, founded by Luangphor Viriyang Sirintharo</p>
+    {
+      analytics && (
+        <p class="footer__small footer__settings">
+          <button type="button" class="footer__link" data-cookie-settings hidden>
+            Cookie settings
+          </button>
+        </p>
+      )
+    }
   </div>
 </footer>
 
@@ -32,6 +43,25 @@ const year = new Date().getFullYear();
     font-size: 21px;
     color: var(--ivory);
     margin-bottom: 6px !important;
+  }
+  .footer__settings {
+    margin-top: 6px !important;
+  }
+  .footer__link {
+    padding: 4px 0;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .footer__link:hover {
+    color: var(--ivory);
+  }
+  .footer__link[hidden] {
+    display: none;
   }
   .footer__small {
     margin-top: 18px !important;
