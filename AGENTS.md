@@ -87,7 +87,7 @@ The deploy bot (`.github/workflows/deploy.yml`) publishes `main` to GitHub Pages
 
 **After merging a pull request, run the deploy bot** to publish it; until publishing on every merge is switched on, merging alone changes nothing on the site. A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it. To publish on every merge into `main`, remove the two `#` before `push:` at the top of `deploy.yml`.
 
-Pull requests get the check bot (`check.yml`), which runs `npm test`, so a red X shows up before anything is merged. First publish, the live Sheet and the domain switch: README → "Going live".
+Pull requests get the check bot (`check.yml`), which runs `npm test`; the ruleset "Protect main" won't let a pull request with a red X be merged. First publish, the live Sheet and the domain switch: README → "Going live".
 
 ## Google Sheet (read and write)
 
@@ -146,7 +146,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - [ ] No passwords, API keys or Google Sheet links in the code
 - [ ] The updated `demo/samathi101-demo.html` is committed with the change (`npm test` regenerates it)
 
-Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, and force-pushes and deleting `main` are blocked. It doesn't require the check bot yet, so look for the green tick before merging.
+Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked.
 
 ## Open items (26 Oct 2026)
 
@@ -169,7 +169,6 @@ MIC Online 2027 registration (the course being promoted):
 
 GitHub and Analytics:
 
-- The ruleset "Protect main" requires a pull request but not yet the check bot's tick: add **Require status checks to pass** → `check`, so a red X blocks merging.
 - Google Analytics also counts the client's visits to the review site. That's harmless; to keep the numbers clean, empty the `PUBLIC_GA_MEASUREMENT_ID` variable until the domain switch.
 
 Other courses (not a priority now; the focus is MIC Online):
