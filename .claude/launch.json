@@ -23,6 +23,18 @@
       "port": 4321
     },
     {
+      "name": "dev-analytics",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PUBLIC_SHEET_API_URL=http://localhost:8787/exec",
+        "PUBLIC_GA_MEASUREMENT_ID=G-TEST000000",
+        "npm",
+        "run",
+        "dev"
+      ],
+      "port": 4321
+    },
+    {
       "name": "preview",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

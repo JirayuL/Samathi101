@@ -72,6 +72,7 @@ const first = tabs[0].id;
       if (on && scroller.contains(t)) scroller.scrollTo({ left: t.offsetLeft - scroller.offsetLeft - 16, behavior: 'smooth' });
     }
     for (const p of panels) p.classList.toggle('is-active', p === panel);
+    document.dispatchEvent(new CustomEvent('samathi:tab', { detail: { id } })); // for Analytics.astro
     return true;
   }
 

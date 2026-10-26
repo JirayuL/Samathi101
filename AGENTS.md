@@ -30,7 +30,7 @@ npm run dev            # http://localhost:4321/Samathi101/, reloads as you edit
 | `npm run demo` / `npm run check-links` | Only the demo, or only the link check |
 | `npm run mock-sheet` | A stand-in for the Google Sheet script at http://localhost:8787/exec, for testing the registration form without Google (see "Google Sheet") |
 
-Using Claude Code? `.claude/launch.json` has `dev`, `preview`, `mock-sheet`, and `dev-mock` (the dev server wired to `mock-sheet`; macOS and Linux) ready for the preview pane.
+Using Claude Code? `.claude/launch.json` has `dev`, `preview`, `mock-sheet`, `dev-mock` (the dev server wired to `mock-sheet`) and `dev-analytics` (the same, plus the cookie banner with a test Analytics ID) ready for the preview pane; the last two need macOS or Linux.
 
 ## Where to make changes
 
@@ -46,6 +46,7 @@ Content lives in `src/data/`. Components only lay it out, so most edits never to
 | A course image | Put it in `src/assets/courses/`, import it at the top of `courses.ts` |
 | A registration form's questions and texts | `src/data/registration.ts` |
 | How the form looks and sends | `src/components/ApplyForm.astro` |
+| Cookie banner and Google Analytics events | `src/components/Analytics.astro` |
 | What happens to an application (Sheet row, email copy, closing date) | `apps-script/Code.gs`, then deploy a new version (`apps-script/README.md`) |
 | What the check bot checks | `scripts/check-links.py`, `apps-script/Code.test.mjs` |
 | The check bot itself | `.github/workflows/check.yml` |
@@ -56,7 +57,7 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 
 1. **Registration links stay as the foundation set them.** The courses use their Google Forms, except MIC Online 2027, which uses the site's own form (`src/data/registration.ts` → Google Sheet); its Google Form is the fallback. Don't change a link, a question or the consent text unless the foundation asks.
 2. **No secrets in the repo.** The repo is public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which visitors' browsers can see; the live one is still kept out of the repo, as a GitHub secret.
-3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them, and don't add tracking (Pixel, Analytics) without a consent banner.
+3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them. Tracking runs only after the visitor agrees: Google Analytics waits for "Allow analytics" (`src/components/Analytics.astro`), and anything new (a Meta Pixel, say) must go through the same banner. Never send names, emails or form answers to any tracker.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
 5. **Images go in `src/assets/`** with a real `alt` text, so Astro optimizes them. Use `public/` only for files served as-is (favicon, CNAME).
 6. **Paths:** the site is built for `/Samathi101/` until the domain switch (see `astro.config.mjs`). Don't hard-code links that start with `/`; use `#tab-id` links or `import.meta.env.BASE_URL`.
@@ -109,6 +110,19 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - **Testing without Google:** run `npm run mock-sheet` and set `PUBLIC_SHEET_API_URL=http://localhost:8787/exec` in `.env`, then restart `npm run dev` (in Claude Code: start `mock-sheet`, then `dev-mock`). Applications are printed in the `mock-sheet` window. `npm run mock-sheet -- --closed` shows the "closed" state, `-- --fail` the error message, and `-- --human` refuses applications without a passed human check. `dev-mock` also turns on the check with Cloudflare's always-pass test key.
 - **Privacy:** share the spreadsheet only with the people who handle registrations. Don't add questions, tracking or logging of answers. The human check is a security measure from Cloudflare, loaded only on the form, not tracking.
 
+## Analytics (Google Analytics 4)
+
+- **Consent first:** with a measurement ID in `PUBLIC_GA_MEASUREMENT_ID` (a GitHub variable), the site shows a cookie banner at the bottom. Nothing is loaded from Google until the visitor clicks "Allow analytics"; "No thanks" is remembered, and "Cookie settings" in the footer changes the choice. Switching off also removes Analytics' cookies. Both buttons look the same on purpose.
+- **What is sent:** the usual page visit, plus three events with ids only (never names, emails or answers):
+  - `view_tab` (`tab_id`): someone opened a tab;
+  - `register_click` (`course_id`, `destination` = `site_form` or `google_form`, `tab_id`): someone clicked a Register button;
+  - `application_sent` (`form_id`): an application went through the site's form.
+
+  Ads features and Google signals are switched off in the code.
+- **How it's wired:** `Tabs.astro` and `ApplyForm.astro` announce tab changes and sent applications (`samathi:tab`, `samathi:applied`), and Register buttons carry `data-course`; only `Analytics.astro` talks to Google.
+- **Not in the demo, not on your computer:** leave `PUBLIC_GA_MEASUREMENT_ID` empty in `.env`, so local work doesn't count as visits. The demo drops it anyway, because cookies don't work in a page opened from a file and client reviews aren't real visits. To test the banner locally, start the dev server with any ID, e.g. `PUBLIC_GA_MEASUREMENT_ID=G-TEST000000 npm run dev`, and click "No thanks" or block the request.
+- **In Google Analytics** (Admin): keep data retention at 2 months, leave Google signals off, and don't link Google Ads. In the reports, the three events appear under Reports → Engagement → Events; mark `application_sent` as a key event to count applications.
+
 ## Troubleshooting
 
 | Problem | Fix |
@@ -159,5 +173,5 @@ Other courses (not a priority now; the focus is MIC Online):
 
 ## Planned work
 
-- Meta Pixel and Google Analytics with a consent banner, to see where people come from and what they register for
+- Meta Pixel, through the same consent banner as Google Analytics (`Analytics.astro`), if the foundation runs Facebook ads
 - SEO: share image, structured data for courses, sitemap and robots.txt, Search Console after the domain switch

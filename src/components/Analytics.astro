@@ -1,0 +1,187 @@
+---
+/**
+ * Google Analytics 4, only with the visitor's consent (Thailand's PDPA, AGENTS.md rule 3).
+ * Nothing is loaded from Google until "Allow analytics" is clicked. The choice is remembered in this
+ * browser, and "Cookie settings" in the footer changes it; switching off also removes Analytics' cookies.
+ * Without PUBLIC_GA_MEASUREMENT_ID there is no banner and no analytics.
+ *
+ * Events (never personal data, never form answers):
+ *   view_tab          { tab_id }                              a tab was opened
+ *   register_click    { course_id, destination, tab_id }      a Register button (site_form or google_form)
+ *   application_sent  { form_id }                             an application was sent from the site's form
+ */
+const id = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '').trim();
+---
+
+{
+  id && (
+    <div class="consent" data-consent data-ga-id={id} role="region" aria-label="Analytics cookies" hidden>
+      <div class="container consent__inner">
+        <p class="consent__text">
+          May we use Google Analytics? Its cookies show us how visitors find this site and which courses interest
+          them. It stays off unless you allow it, and never sees your registration answers.
+        </p>
+        <div class="consent__buttons">
+          <button type="button" class="consent__btn" data-consent-yes>Allow analytics</button>
+          <button type="button" class="consent__btn" data-consent-no>No thanks</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  type Gtag = (...args: unknown[]) => void;
+  const KEY = 'samathi101-analytics';
+  const box = document.querySelector<HTMLElement>('[data-consent]');
+  const id = box?.dataset.gaId ?? '';
+  if (box && id) setUp(box, id);
+
+  function read() {
+    try {
+      return localStorage.getItem(KEY);
+    } catch {
+      return null;
+    }
+  }
+  function save(value: 'granted' | 'denied') {
+    try {
+      localStorage.setItem(KEY, value);
+    } catch {
+      // private window: the choice lasts until the page closes
+    }
+  }
+
+  function setUp(box: HTMLElement, id: string) {
+    const w = window as unknown as { dataLayer: unknown[]; gtag?: Gtag };
+    const settings = [...document.querySelectorAll<HTMLElement>('[data-cookie-settings]')];
+    for (const button of settings) button.hidden = false;
+    let loaded = false;
+
+    // gtag.js reads the arguments object itself, so this must be a plain function
+    function gtag(..._args: unknown[]) {
+      // eslint-disable-next-line prefer-rest-params
+      w.dataLayer.push(arguments);
+    }
+
+    function start() {
+      if (loaded) return gtag('consent', 'update', { analytics_storage: 'granted' });
+      loaded = true;
+      w.dataLayer = w.dataLayer || [];
+      w.gtag = gtag;
+      gtag('consent', 'default', {
+        analytics_storage: 'granted',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+      });
+      gtag('js', new Date());
+      gtag('config', id, { allow_google_signals: false, allow_ad_personalization_signals: false });
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+      document.head.append(script);
+    }
+
+    function stop() {
+      if (loaded) gtag('consent', 'update', { analytics_storage: 'denied' });
+      // Remove Analytics' cookies (_ga, _ga_<id>) on this host and its parent domain
+      const parts = location.hostname.split('.');
+      const domains = ['', location.hostname, parts.length > 1 ? '.' + parts.slice(-2).join('.') : ''];
+      for (const cookie of document.cookie.split(';')) {
+        const name = cookie.split('=')[0].trim();
+        if (!name.startsWith('_ga')) continue;
+        for (const domain of domains) document.cookie = `${name}=; Max-Age=0; path=/${domain ? `; domain=${domain}` : ''}`;
+      }
+    }
+
+    const choice = read();
+    if (choice === 'granted') start();
+    else if (choice !== 'denied') box.hidden = false;
+
+    box.querySelector('[data-consent-yes]')!.addEventListener('click', () => {
+      save('granted');
+      box.hidden = true;
+      start();
+    });
+    box.querySelector('[data-consent-no]')!.addEventListener('click', () => {
+      save('denied');
+      box.hidden = true;
+      stop();
+    });
+    for (const button of settings) {
+      button.addEventListener('click', () => {
+        box.hidden = false;
+        box.querySelector<HTMLButtonElement>('button')?.focus();
+      });
+    }
+
+    // Events: only ids of tabs, courses and forms
+    const send = (name: string, params: Record<string, string>) => {
+      if (loaded && read() !== 'denied') gtag('event', name, params);
+    };
+    document.addEventListener('samathi:tab', (e) => send('view_tab', { tab_id: (e as CustomEvent).detail.id }));
+    document.addEventListener('samathi:applied', (e) => send('application_sent', { form_id: (e as CustomEvent).detail.form }));
+    document.addEventListener('click', (e) => {
+      const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-course]');
+      if (!link) return;
+      send('register_click', {
+        course_id: link.dataset.course ?? '',
+        destination: (link.getAttribute('href') ?? '').startsWith('#') ? 'site_form' : 'google_form',
+        tab_id: link.closest('[role="tabpanel"]')?.id ?? '',
+      });
+    });
+  }
+</script>
+
+<style>
+  .consent {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30; /* above the sticky tab bar */
+    background: var(--palm);
+    border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(31, 59, 45, 0.08);
+  }
+  .consent__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    padding-block: 14px;
+  }
+  .consent__text {
+    flex: 1 1 420px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--forest);
+  }
+  .consent__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  /* Both answers look the same: no nudging (PDPA) */
+  .consent__btn {
+    min-height: 44px;
+    padding: 8px 18px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--forest);
+    background: var(--paper);
+    border: 1px solid var(--forest);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .consent__btn:hover {
+    background: var(--forest);
+    color: var(--ivory);
+  }
+  [hidden] {
+    display: none !important;
+  }
+</style>

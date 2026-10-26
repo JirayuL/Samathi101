@@ -7,9 +7,11 @@ interface Props {
   sub?: string;
   style?: ButtonStyle;
   disabled?: boolean;
+  /** The course this button registers for: lets Analytics count Register clicks per course */
+  course?: string;
 }
 
-const { href = '#', label, sub, style = 'primary', disabled = false } = Astro.props;
+const { href = '#', label, sub, style = 'primary', disabled = false, course } = Astro.props;
 const external = /^https?:\/\//.test(href);
 ---
 
@@ -20,7 +22,7 @@ const external = /^https?:\/\//.test(href);
       {sub && <span class="btn__sub">{sub}</span>}
     </span>
   ) : (
-    <a class:list={['btn', `btn--${style}`]} href={href} {...(external ? { target: '_blank', rel: 'noopener' } : {})}>
+    <a class:list={['btn', `btn--${style}`]} href={href} data-course={course} {...(external ? { target: '_blank', rel: 'noopener' } : {})}>
       <span class="btn__label">{label}</span>
       {sub && <span class="btn__sub">{sub}</span>}
     </a>

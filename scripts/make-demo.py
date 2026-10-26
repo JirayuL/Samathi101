@@ -73,6 +73,12 @@ if re.search(r'data-api="https?://(localhost|127\.0\.0\.1)', html):
     html = re.sub(r'data-api="https?://(localhost|127\.0\.0\.1)[^"]*"', 'data-api=""', html)
     print("Note: the demo's registration form isn't connected (PUBLIC_SHEET_API_URL points at localhost)")
 
+# No Google Analytics in the demo: client reviews aren't real visits, and cookies don't work in a page opened
+# from a file. Dropping the measurement ID turns off the banner and the "Cookie settings" link.
+if re.search(r'data-ga-id="G-', html):
+    html = re.sub(r'data-ga-id="[^"]*"', 'data-ga-id=""', html)
+    print("Note: Google Analytics is left out of the demo")
+
 # Leftover root-relative links that would break outside the site
 html = html.replace('href="/"', 'href="#"')
 
