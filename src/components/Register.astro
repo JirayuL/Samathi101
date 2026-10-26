@@ -51,7 +51,7 @@ const list = [...courses].sort(
               </div>
               <div class="entry__actions">
                 {c.status === 'open' ? (
-                  buttons.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} />)
+                  buttons.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} course={c.id} />)
                 ) : (
                   <a class="entry__more" href={`#${c.id}`}>
                     Read about this course

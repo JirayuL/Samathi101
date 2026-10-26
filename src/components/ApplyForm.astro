@@ -135,7 +135,7 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
 
         <div class="apply__actions">
           <button class="apply__submit" type="submit" hidden={!api}>Submit application</button>
-          <a class="apply__submit" href={form.googleFormUrl} target="_blank" rel="noopener" data-not-connected hidden={!!api}>
+          <a class="apply__submit" href={form.googleFormUrl} target="_blank" rel="noopener" data-course={form.courseId} data-not-connected hidden={!!api}>
             Apply with the Google Form
           </a>
         </div>
@@ -307,6 +307,8 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
         if (!out.ok) throw new Error(out.error || 'not saved');
         form.hidden = true;
         done.hidden = false;
+        // For Analytics.astro: only which form, never the answers
+        document.dispatchEvent(new CustomEvent('samathi:applied', { detail: { form: form.dataset.formId } }));
         done.querySelector<HTMLElement>('[data-no-copy]')!.hidden = out.emailed !== false;
         done.focus();
         done.scrollIntoView({ block: 'start' });
