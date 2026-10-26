@@ -4,26 +4,26 @@ Landing page rebuilt from the Canva design, using [Astro](https://astro.build).
 
 **Working on the site? Start with [AGENTS.md](AGENTS.md)**: setup, where to edit, rules, testing, demos, the Google Sheet connection, troubleshooting and the open items.
 
-**Why Astro:** pages are plain HTML + CSS components (easy to read and edit), the output is a static site that free hosts such as GitHub Pages can serve (see Hosting below), images are optimized automatically, and when you need server features later (forms, Thai language, a CMS, a database) Astro supports them without switching frameworks.
+**Why Astro:** pages are plain HTML + CSS components (easy to read and edit), the output is a static site that GitHub Pages hosts for free (see Going live below), images are optimized automatically, and when you need server features later (forms, Thai language, a CMS, a database) Astro supports them without switching frameworks.
 
 ---
 
 ## How it fits together
 
 ```
-GitHub repo (private) ──▶ static host (not chosen yet): the site, not published
-                               │  fetch: read course info, send registrations
-                               ▼
-                        Google Apps Script web app ──▶ Google Sheet (private)
+GitHub repo (public) ── deploy bot ──▶ GitHub Pages: the site
+                                            │  fetch: "open?", send applications
+                                            ▼
+                                     Google Apps Script web app ──▶ Google Sheet (private)
 ```
 
-- **GitHub** keeps the code in a private repo that only collaborators can see. The check bot tests every pull request.
-- **A static host** (to be chosen, see Hosting) will serve the site. It can't keep secrets, so the site holds no keys.
-- **Google Apps Script + Google Sheet** store the applications sent with the site's registration form (MIC Online 2027), and tell the form whether registration is still open. The script runs as the foundation's Google account; the Sheet stays private. Setup: `apps-script/README.md`; rules: AGENTS.md → "Google Sheet".
+- **GitHub** keeps the code in a public repo (free GitHub Pages needs that); collaborators push. The check bot tests every pull request, and the deploy bot checks, publishes and re-checks the live site, rolling back if that fails.
+- **GitHub Pages** serves the site for free: first at https://jirayul.github.io/Samathi101/ for review, later at english.samathi101.com. It can't keep secrets, so the site holds no keys.
+- **Google Apps Script + Google Sheet** store the applications sent with the site's registration form (MIC Online 2027), and tell the form whether registration is still open. The script runs as the Google account that deploys it; the Sheet stays private. Setup: `apps-script/README.md`; rules: AGENTS.md → "Google Sheet".
 
 ## Demo for the client
 
-`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. While the site isn't published, this is how the client sees it.
+`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. Until the review site is up, this is how the client sees it.
 
 ## Open items (26 Oct 2026)
 
@@ -31,19 +31,22 @@ The same list is in AGENTS.md → "Open items"; when you finish or add one, upda
 
 Content to confirm with the foundation:
 
-- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
-- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 - The MIC Online poster spells the founder's title "Somdet Phra Nyanavajirodome"; the site and the Google Form use "Nyanavajirodom".
 
 Design (needs approval, AGENTS.md rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under the 4.5:1 minimum for readable text. It is used for tab labels, the Register tab summaries and small labels.
 
-Hosting: decide how and when to publish (see Hosting below). Until then the site is private and shown with the single-file demo.
+Going live: see "Going live" below: first the review site on GitHub Pages for the client, then the live Sheet, then the domain switch.
 
-MIC Online 2027 registration:
+MIC Online 2027 registration (the course being promoted):
 
-- Set up the Apps Script (`apps-script/README.md`): the **test** copy now, so the client can try the form in the demo, and the **live** copy before the site is published. Until then the form links to the Google Form.
-- Decide where applications go: the live script can sit in the spreadsheet that already collects the Google Form's answers, so both arrive in one file, in two tabs.
+- Update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- The live spreadsheet is, for now, Gear's "Samathi 101 registrations", with its own deployment of the script. Later, move it to the foundation's Google account, so the email copies come from the foundation and the data stays with it.
 - The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
+
+Other courses (not a priority now; the focus is MIC Online):
+
+- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
+- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 
 ## Run it locally
 
@@ -54,6 +57,7 @@ npm ci             # install the exact versions in package-lock.json
 npm run dev        # http://localhost:4321/Samathi101/ — auto-reloads as you edit
 npm test           # build into dist/, update the demo, check every link (the bots run this too)
 npm run preview    # serve dist/ at http://localhost:4321/Samathi101/ to double-check the build
+npm run smoke-test -- http://localhost:4321/Samathi101/   # check a running copy, as the deploy bot checks the live site
 npm run mock-sheet # stand-in for the Google Sheet script, to test the registration form (AGENTS.md → "Google Sheet")
 ```
 
@@ -86,9 +90,11 @@ src/
 public/               ← files served as-is (favicon, CNAME.disabled)
 scripts/
   check-links.py      ← link check (part of npm test)
+  smoke-test.py       ← checks a running copy of the site (the deploy bot runs it on the live site)
   make-demo.py        ← builds the single-file demo (runs with every npm run build and npm test)
 demo/                 ← the single-file demo for the client (regenerated by every build)
 .github/
+  workflows/deploy.yml   ← deploy bot: check, publish, check the live site, roll back if needed (run by hand for now)
   workflows/check.yml    ← check bot: runs npm test on every pull request
   pull_request_template.md ← the pre-push checklist, shown on every pull request
 .env.example          ← settings for your own computer (copy to .env); the Google Sheet test URL
@@ -148,37 +154,44 @@ Each Register button appears twice, on its course tab and on the Register tab, a
 
 Content still to confirm is listed under "Open items" above.
 
-## Hosting (not published yet)
+## Going live (GitHub Pages)
 
-The repo is **private**: only its collaborators (**Settings → Collaborators**) can see the code. Nothing is published while we wait for the client's new course and content; the client sees the single-file demo.
+The site goes live in three steps, each one checked before the next. The deploy bot (`.github/workflows/deploy.yml`, AGENTS.md → "Publishing") runs by hand: **Actions → "Deploy to GitHub Pages" → Run workflow**.
 
-**Every change:** open a pull request; the check bot (`.github/workflows/check.yml`) runs `npm test` on it. Merging into `main` doesn't publish anything.
+### 1. Review site for the client: https://jirayul.github.io/Samathi101/
 
-**When the foundation is ready to publish**, the hosting choice depends on whether the repo stays private:
+- [ ] **Test script up to date:** paste the latest `apps-script/Code.gs` and `appsscript.json` into the test script, deploy a **new version** (approve the new "connect to an external service" permission), and add the Script Property `ALLOW_BEFORE_OPENING` = `yes` (`apps-script/README.md`), so the client can try the form before 1 November.
+- [ ] Repo **Settings → General → Danger Zone → Change visibility → Public**.
+- [ ] **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+- [ ] **Settings → Secrets and variables → Actions → Secrets → New repository secret:** `PUBLIC_SHEET_API_URL` = the **test** script's URL, so the client's tries land in the TEST sheet.
+- [ ] **"Verify you are human" check:** in Cloudflare (a free account is enough), **Turnstile → Add widget**: name "Samathi 101 registration", hostnames `jirayul.github.io`, `english.samathi101.com` and `localhost`, mode **Managed**. Then in GitHub, **Settings → Secrets and variables → Actions → Variables → New repository variable:** `PUBLIC_TURNSTILE_SITE_KEY` = the widget's **site key**. Keep the **secret key** for step 2.
+- [ ] **Actions → "Deploy to GitHub Pages" → Run workflow.** build, deploy and verify should turn green (about 2 minutes).
+- [ ] Look at it on a phone and a desktop, send one application marked TEST, then send the link to the client.
 
-- **GitHub Pages** (what `astro.config.mjs` is already set up for) is free only for **public** repos. A private repo needs a paid GitHub plan, and even then the published site is public. Nothing secret is in this repo, so making it public is safe, but then anyone can read the code.
-- To keep the repo private at zero cost, use a host that builds from private repos on a free plan, such as **Cloudflare Pages**. samathi101.com's DNS is already on Cloudflare.
+### 2. Live Sheet (when the client approves)
 
-**A ready-made GitHub Pages deploy bot** was written and then removed for now. Each run built the site and ran `npm test` (nothing published if that failed), published to GitHub Pages, checked the live site (the page, every tab, every image, font and stylesheet), and republished the last version that passed if that check failed. To bring it back: `git fetch origin pull/1/head`, then `git checkout 8b2f262 -- .github/workflows/deploy.yml scripts/smoke-test.py`, then:
+- [ ] In the live spreadsheet (for now "Samathi 101 registrations"): set up the script (`apps-script/README.md`) with the Script Property `TURNSTILE_SECRET` = the Turnstile widget's **secret key**, and **without** `ALLOW_BEFORE_OPENING`.
+- [ ] Change the secret `PUBLIC_SHEET_API_URL` to the **live** script's URL, then run the deploy bot again.
+- [ ] Before 1 November the form says "opens on 1 November 2026"; from then on it takes applications. Send one marked TEST, check the row and the email copy, then delete the row.
+- [ ] Delete the test rows in the TEST sheet.
 
-1. Make the repo public (**Settings → General → Danger Zone → Change visibility**), or move to a paid plan.
-2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Merge the restored files, then **Actions → "Deploy to GitHub Pages" → Run workflow**. After a minute or two the site is live at **https://jirayul.github.io/Samathi101/**. The comments at the top of `deploy.yml` say how to publish on every merge.
+### 3. Switch english.samathi101.com (pick a quiet time)
 
-**Other one-time settings** (repo admin):
-- **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request and the status check **check** (from the check bot), so nobody can merge a change that fails `npm test`. GitHub enforces rulesets on private repos only on paid plans; on the free plan, check for the green tick before merging.
-- When the registration page goes live: give the published build the live Apps Script web app URL as `PUBLIC_SHEET_API_URL` (AGENTS.md → "Google Sheet").
+Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
 
-### Switching english.samathi101.com to GitHub Pages
+- [ ] In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Pull request, merge, run the deploy bot. From then on jirayul.github.io/Samathi101/ forwards to english.samathi101.com, so do the next step straight away.
+- [ ] The domain admin, in **Cloudflare → DNS** for samathi101.com: **screenshot the current `english` record first** (today an A record to 103.169.142.0, the Canva site), then replace it with Type `CNAME`, Name `english`, Target `jirayul.github.io`, Proxy status **DNS only** (grey cloud).
+- [ ] Repo **Settings → Pages → Custom domain** shows `english.samathi101.com`. Once the DNS check passes, tick **Enforce HTTPS** (the certificate can take up to an hour).
+- [ ] Check https://english.samathi101.com on a phone and a desktop, and run `npm run smoke-test -- https://english.samathi101.com/`.
+- [ ] **To roll back**, the admin puts the old `english` record back from the screenshot; the Canva site returns within minutes.
+- [ ] After a few good days: in Canva, disconnect the custom domain from the old website.
 
-Do this once the site is published on GitHub Pages (see Hosting) and the team is happy with it. Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
+### After launch
 
-1. In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Open a pull request, merge it, and publish.
-2. The domain admin edits the `english` record in **Cloudflare → DNS** for samathi101.com: Type `CNAME`, Name `english`, Target `jirayul.github.io`, Proxy status **DNS only** (grey cloud). Remove the old Canva `english` records.
-3. Repo **Settings → Pages → Custom domain** shows `english.samathi101.com`. Once the DNS check passes, tick **Enforce HTTPS**.
-4. In Canva, disconnect the custom domain from the old website.
-
-To roll back, the admin puts the old `english` record back.
+- [ ] Publish on every merge: remove the two `#` before `push:` at the top of `deploy.yml`.
+- [ ] **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request and the status check **check**, so nobody can merge a change that fails `npm test` (free on public repos).
+- [ ] Optional: verify the domain in your GitHub account (**Settings → Pages → Add a domain**), so nobody else can claim english.samathi101.com on GitHub Pages.
+- [ ] Add volunteers under **Settings → Collaborators**.
 
 ## Tabs and links
 
