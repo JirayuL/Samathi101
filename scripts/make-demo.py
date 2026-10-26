@@ -67,6 +67,12 @@ def youtube_sub(m):
             f'<span style="padding:10px 18px;border-radius:3px;background:var(--kasaya);color:#fff;font-weight:600">'
             f'&#9654; Watch the video on YouTube</span></a>')
 html = re.sub(r'<iframe\b[^>]*youtube-nocookie\.com/embed/([\w-]+)(?:\?start=(\d+))?[^>]*></iframe>', youtube_sub, html)
+# A registration form pointing at the local stand-in (npm run mock-sheet) would fail for the client:
+# drop that address, so the demo's form shows the Google Form link instead. A real test-Sheet URL stays.
+if re.search(r'data-api="https?://(localhost|127\.0\.0\.1)', html):
+    html = re.sub(r'data-api="https?://(localhost|127\.0\.0\.1)[^"]*"', 'data-api=""', html)
+    print("Note: the demo's registration form isn't connected (PUBLIC_SHEET_API_URL points at localhost)")
+
 # Leftover root-relative links that would break outside the site
 html = html.replace('href="/"', 'href="#"')
 
