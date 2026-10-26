@@ -4,14 +4,40 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 4321
+    },
+    {
+      "name": "dev-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PUBLIC_SHEET_API_URL=http://localhost:8787/exec",
+        "npm",
+        "run",
+        "dev"
+      ],
       "port": 4321
     },
     {
       "name": "preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview"],
+      "runtimeArgs": [
+        "run",
+        "preview"
+      ],
       "port": 4321
+    },
+    {
+      "name": "mock-sheet",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "mock-sheet"
+      ],
+      "port": 8787
     }
   ]
 }

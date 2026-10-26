@@ -1,0 +1,454 @@
+---
+/**
+ * An application form from src/data/registration.ts. It sends the answers to the Google Apps Script
+ * web app at PUBLIC_SHEET_API_URL (apps-script/Code.gs), which saves them as one row in the Google Sheet.
+ * While that URL is empty, the form shows a link to the Google Form instead of a submit button.
+ */
+import type { RegistrationForm, Field } from '../data/registration';
+
+interface Props {
+  form: RegistrationForm;
+}
+
+const { form } = Astro.props;
+const api = (import.meta.env.PUBLIC_SHEET_API_URL ?? '').trim();
+const id = (field: Field) => `${form.id}-${field.name}`;
+// Every question in order: the columns of the Sheet
+const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name, label: f.label })));
+---
+
+<section class="apply" id={`apply-${form.id}`}>
+  <div class="container apply__inner">
+    <div class="section-head">
+      <h2>{form.title}</h2>
+      {form.intro.map((p) => <p>{p}</p>)}
+    </div>
+
+    <!-- data-not-connected: shown while there is no web app URL (the script re-checks, e.g. in the demo) -->
+    <p class="apply__notice" data-not-connected hidden={!!api}>
+      This form isn't connected to our registration sheet yet. Please apply with the{' '}
+      <a href={form.googleFormUrl} target="_blank" rel="noopener">Google Form</a> for now.
+    </p>
+    <p class="apply__notice" data-status role="status" hidden></p>
+
+    <!-- method="post": if JavaScript is off, answers are never put in the page address -->
+    <form
+      class="apply__form"
+      method="post"
+      data-form-id={form.id}
+      data-api={api}
+      data-columns={JSON.stringify(columns)}
+      data-one-of={JSON.stringify(form.oneOf ?? [])}
+      novalidate
+    >
+      <fieldset class="apply__all" data-all>
+        <p class="apply__legend"><span class="req" aria-hidden="true">*</span> Required</p>
+
+        {
+          form.sections.map((section) => (
+            <fieldset
+              class="apply__section"
+              data-show-if-field={section.showIf?.field}
+              data-show-if-equals={section.showIf?.equals}
+            >
+              {section.heading && (
+                <legend class="apply__heading">
+                  <h3>{section.heading}</h3>
+                </legend>
+              )}
+              {section.text?.map((p) => <p class="apply__text">{p}</p>)}
+
+              {section.fields.map((f) =>
+                f.type === 'radio' || f.type === 'checkbox' ? (
+                  <fieldset class="q" aria-describedby={f.help ? `${id(f)}-help` : undefined}>
+                    <legend class="q__label">
+                      {f.label}
+                      {f.required && <span class="req" aria-hidden="true"> *</span>}
+                    </legend>
+                    {f.help && (
+                      <div class="q__help" id={`${id(f)}-help`}>
+                        {f.help.map((line) => <p>{line}</p>)}
+                      </div>
+                    )}
+                    {f.options?.map((opt) => (
+                      <label class="choice">
+                        <input
+                          type={f.type}
+                          name={f.name}
+                          value={opt}
+                          required={f.required && (f.type === 'radio' || f.options?.length === 1)}
+                        />
+                        <span>{opt}</span>
+                      </label>
+                    ))}
+                    {f.other && (
+                      <label class="choice choice--other">
+                        <input type={f.type} name={f.name} value="__other__" required={f.required && f.type === 'radio'} data-other />
+                        <span>Other:</span>
+                        <input class="input" type="text" name={`${f.name}__other`} aria-label={`Other: ${f.label}`} data-other-text />
+                      </label>
+                    )}
+                  </fieldset>
+                ) : (
+                  <div class="q">
+                    <label class="q__label" for={id(f)}>
+                      {f.label}
+                      {f.required && <span class="req" aria-hidden="true"> *</span>}
+                    </label>
+                    {f.help && (
+                      <div class="q__help" id={`${id(f)}-help`}>
+                        {f.help.map((line) => <p>{line}</p>)}
+                      </div>
+                    )}
+                    {f.type === 'textarea' ? (
+                      <textarea class="input" id={id(f)} name={f.name} rows="4" required={f.required} aria-describedby={f.help ? `${id(f)}-help` : undefined} />
+                    ) : (
+                      <input
+                        class="input"
+                        id={id(f)}
+                        name={f.name}
+                        type={f.type}
+                        required={f.required}
+                        autocomplete={
+                          ({ email: 'email', first_name: 'given-name', last_name: 'family-name', mobile: 'tel', whatsapp: 'tel', birth_date: 'bday', country: 'country-name' } as Record<string, string>)[f.name]
+                        }
+                        aria-describedby={f.help ? `${id(f)}-help` : undefined}
+                      />
+                    )}
+                  </div>
+                )
+              )}
+            </fieldset>
+          ))
+        }
+
+        <!-- Spam trap: people never see or fill this; bots that fill every field are ignored -->
+        <div class="apply__trap" aria-hidden="true">
+          <label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+
+        <div class="apply__actions">
+          <button class="apply__submit" type="submit" hidden={!api}>Submit application</button>
+          <a class="apply__submit" href={form.googleFormUrl} target="_blank" rel="noopener" data-not-connected hidden={!!api}>
+            Apply with the Google Form
+          </a>
+        </div>
+        <div class="apply__error" data-error role="alert" hidden>
+          <p data-error-text></p>
+          <p>
+            If this keeps happening, apply with the <a href={form.googleFormUrl} target="_blank" rel="noopener">Google Form</a> or
+            email <a href="mailto:wif.meditation@gmail.com">wif.meditation@gmail.com</a>.
+          </p>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="apply__done" data-done tabindex="-1" hidden>
+      <h3>Application sent</h3>
+      {form.thankYou.map((p) => <p>{p}</p>)}
+      <p data-no-copy hidden>We couldn't email you a copy just now, but your application is saved.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  type Column = { name: string; label: string };
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('.apply__form')) setUp(form);
+
+  function setUp(form: HTMLFormElement) {
+    const api = form.dataset.api ?? '';
+    const columns: Column[] = JSON.parse(form.dataset.columns ?? '[]');
+    const oneOf: { fields: string[]; message: string }[] = JSON.parse(form.dataset.oneOf ?? '[]');
+    const box = form.closest('.apply')!;
+    const all = form.querySelector<HTMLFieldSetElement>('[data-all]')!;
+    const status = box.querySelector<HTMLElement>('[data-status]')!;
+    const error = form.querySelector<HTMLElement>('[data-error]')!;
+    const errorText = form.querySelector<HTMLElement>('[data-error-text]')!;
+    const done = box.querySelector<HTMLElement>('[data-done]')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement | null;
+
+    // Not connected (no web app URL): offer the Google Form instead of the submit button
+    for (const el of box.querySelectorAll<HTMLElement>('[data-not-connected]')) el.hidden = !!api;
+    button.hidden = !api;
+
+    // Sections shown for one answer only (e.g. Thai applicants). Hidden sections are disabled,
+    // so the browser skips their required questions and they are sent as empty answers.
+    const sections = [...form.querySelectorAll<HTMLFieldSetElement>('[data-show-if-field]')];
+    // "Other:" text boxes are required only while their choice is picked
+    const others = [...form.querySelectorAll<HTMLInputElement>('[data-other-text]')];
+
+    function refresh() {
+      for (const s of sections) {
+        const picked = form.querySelector<HTMLInputElement>(`input[name="${s.dataset.showIfField}"]:checked`);
+        const show = picked?.value === s.dataset.showIfEquals;
+        s.hidden = !show;
+        s.disabled = !show;
+      }
+      for (const text of others) {
+        const choice = text.parentElement!.querySelector<HTMLInputElement>('[data-other]')!;
+        text.required = choice.checked;
+      }
+    }
+    form.addEventListener('change', refresh);
+    form.addEventListener('input', (e) => {
+      const t = e.target as HTMLInputElement;
+      // Typing in an "Other:" box picks that choice
+      if (t.matches('[data-other-text]') && t.value) {
+        t.parentElement!.querySelector<HTMLInputElement>('[data-other]')!.checked = true;
+        refresh();
+      }
+      for (const group of oneOf) if (group.fields.includes(t.name)) field(group.fields[0])?.setCustomValidity('');
+    });
+    refresh();
+
+    function answer(data: FormData, name: string) {
+      return data
+        .getAll(name)
+        .map((v) => (v === '__other__' ? String(data.get(`${name}__other`) ?? '') : String(v)).trim())
+        .filter(Boolean)
+        .join(', ');
+    }
+
+    // Read: is registration still open? Asked once, when the form first comes into view.
+    if (api) {
+      const seen = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        seen.disconnect();
+        fetch(`${api}?form=${encodeURIComponent(form.dataset.formId ?? '')}`)
+          .then((r) => r.json())
+          .then((s) => {
+            if (s?.open === false) {
+              status.textContent = s.message || 'Registration has closed.';
+              status.hidden = false;
+              all.disabled = true;
+            }
+          })
+          .catch(() => {}); // the script checks again when the form is sent
+      });
+      seen.observe(form);
+    }
+
+    // Write: send the application
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!api) return;
+      error.hidden = true;
+      const data = new FormData(form);
+      for (const group of oneOf) {
+        const empty = group.fields.every((name) => !answer(data, name));
+        field(group.fields[0])?.setCustomValidity(empty ? group.message : '');
+      }
+      if (!form.reportValidity()) return;
+
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Sending…';
+      try {
+        const res = await fetch(api, {
+          method: 'POST',
+          // No headers on purpose: Apps Script can't answer the browser's CORS check that a JSON header triggers
+          body: JSON.stringify({
+            form: form.dataset.formId,
+            website: data.get('website') ?? '',
+            email: answer(data, 'email'),
+            consent: answer(data, 'consent'),
+            answers: columns.map((c) => [c.label, answer(data, c.name)]),
+          }),
+        });
+        const out = await res.json();
+        if (!out.ok) throw new Error(out.error || 'not saved');
+        form.hidden = true;
+        done.hidden = false;
+        done.querySelector<HTMLElement>('[data-no-copy]')!.hidden = out.emailed !== false;
+        done.focus();
+        done.scrollIntoView({ block: 'start' });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : '';
+        errorText.textContent = /fetch|network|json|load|not saved/i.test(message) || !message
+          ? 'Sorry, your application could not be sent. Please check your internet connection and try again.'
+          : message;
+        error.hidden = false;
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    });
+  }
+</script>
+
+<style>
+  .apply {
+    padding-block: 0 var(--section-gap);
+    scroll-margin-top: 64px; /* clears the sticky tab bar */
+  }
+  .apply__inner {
+    max-width: calc(760px + var(--gutter) * 2);
+  }
+  .apply__notice,
+  .apply__error {
+    padding: 14px 18px;
+    margin: 0 0 28px;
+    background: var(--palm);
+    border-left: 2px solid var(--kasaya);
+    color: var(--forest);
+  }
+  .apply__error {
+    margin: 20px 0 0;
+    border-left-color: var(--lacquer);
+  }
+  .apply__error p {
+    margin: 0 0 6px;
+  }
+  .apply__all,
+  .apply__section,
+  .q {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  .apply__legend {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--forest-mute);
+  }
+  .req {
+    color: var(--lacquer);
+  }
+  .apply__section {
+    padding-top: 28px;
+    margin-top: 28px;
+    border-top: 1px solid var(--rule);
+  }
+  .apply__section:first-of-type {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .apply__heading {
+    padding: 0;
+  }
+  .apply__heading h3 {
+    font-size: 25px;
+    margin-bottom: 10px;
+  }
+  .apply__text {
+    margin: 0 0 14px;
+  }
+  .q {
+    margin-top: 26px;
+  }
+  .q__label {
+    display: block;
+    padding: 0;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--forest);
+    line-height: 1.5;
+  }
+  .q__help {
+    margin: -2px 0 10px;
+    font-size: 15.5px;
+    color: var(--forest-soft);
+  }
+  .q__help p {
+    margin: 0 0 6px;
+  }
+  .input {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 16px; /* 16px or more stops phones zooming in on the field */
+    color: var(--forest);
+    background: #fff;
+    border: 1px solid var(--forest-mute);
+    border-radius: 3px;
+  }
+  textarea.input {
+    resize: vertical;
+    min-height: 120px;
+  }
+  .input:focus-visible {
+    outline-offset: 1px;
+  }
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 7px 0;
+    cursor: pointer;
+    line-height: 1.5;
+  }
+  .choice input[type='radio'],
+  .choice input[type='checkbox'] {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 3px 0 0;
+    accent-color: var(--kasaya);
+  }
+  .choice--other {
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .choice--other .input {
+    flex: 1 1 200px;
+    width: auto;
+    padding-block: 7px;
+  }
+  .apply__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .apply__actions {
+    margin-top: 36px;
+  }
+  .apply__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    min-height: 54px;
+    padding: 9px 26px;
+    border: 0;
+    border-radius: 3px;
+    background: var(--kasaya);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .apply__submit:hover {
+    background: var(--kasaya-deep);
+    color: #fff;
+  }
+  .apply__submit:disabled,
+  .apply__all:disabled .apply__submit {
+    background: var(--forest-mute);
+    cursor: default;
+  }
+  .apply__done {
+    padding: 24px 26px;
+    background: var(--palm);
+    border-left: 2px solid var(--kasaya);
+  }
+  .apply__done h3 {
+    font-size: 26px;
+    margin-bottom: 12px;
+  }
+  .apply__done p {
+    margin: 0 0 12px;
+  }
+  [hidden] {
+    display: none !important;
+  }
+</style>
