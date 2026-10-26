@@ -56,7 +56,7 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 ## Rules
 
 1. **Registration links stay as the foundation set them.** The courses use their Google Forms, except MIC Online 2027, which uses the site's own form (`src/data/registration.ts` → Google Sheet); its Google Form is the fallback. Don't change a link, a question or the consent text unless the foundation asks.
-2. **No secrets in the repo.** The repo is public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which visitors' browsers can see; the live one is still kept out of the repo, as a GitHub secret.
+2. **No secrets in the repo.** The repo is public, and the site's code reaches every visitor anyway. So: no passwords, API keys, links to the Google Sheet itself, or Apps Script web app URLs (test or live). URLs live in your `.env` and in the GitHub secret; that's also why the demo file isn't committed. The site reaches the Sheet only through the Apps Script web app URL, which visitors' browsers can see; the live one is still kept out of the repo, as a GitHub secret.
 3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them. Tracking runs only after the visitor agrees: Google Analytics waits for "Allow analytics" (`src/components/Analytics.astro`), and anything new (a Meta Pixel, say) must go through the same banner. Never send names, emails or form answers to any tracker.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
 5. **Images go in `src/assets/`** with a real `alt` text, so Astro optimizes them. Use `public/` only for files served as-is (favicon, CNAME).
@@ -72,9 +72,9 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 
 ## Demo
 
-- **Single file:** send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except the registration form and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` updates the demo, so commit it with every change. While the site isn't published, this is how the client sees it.
+- **Single file:** `npm run demo` (or `npm run build`, or `npm test`) writes `demo/samathi101-demo.html` on your computer; send it over LINE or email. It opens in any browser and works offline, except the registration form and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. **The demo is never committed** (`demo/` is in `.gitignore`), because it's built from your own `.env` and can contain your test web app URL. The review site is the main way to show the client; the file is for people who can't open the link, or to show a change before it's merged.
 - **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
-- **The demo's registration form** uses `PUBLIC_SHEET_API_URL` from your `.env` when you build it: the **test** Sheet's URL lets the client try it for real; with no URL (or the local stand-in), the form shows a link to the Google Form instead. Never build a demo with the live URL.
+- **The demo's registration form** uses `PUBLIC_SHEET_API_URL` from your own `.env` (create it from `.env.example` and add the test URL yourself): with the **test** URL the client can try it for real; with no URL (or the local stand-in), the form shows a link to the Google Form instead. Never build a demo with the live URL.
 
 ## Publishing (GitHub Pages)
 
@@ -144,7 +144,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - [ ] `npm test` passes, and every Register button goes to the right form
 - [ ] You looked at the changed tab at desktop width and at phone width (375px)
 - [ ] No passwords, API keys or Google Sheet links in the code
-- [ ] The updated `demo/samathi101-demo.html` is committed with the change (`npm test` regenerates it)
+- [ ] No web app URL in what you commit (the demo stays on your computer: `demo/` is in `.gitignore`)
 
 Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked.
 

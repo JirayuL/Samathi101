@@ -16,7 +16,7 @@ Make **two copies**: a **test** one for development and demos, and the **live** 
    - **Live copy:** `TURNSTILE_SECRET` = the **secret key** of the Cloudflare Turnstile widget (README → "Going live"). Applications then need a passed "Verify you are human" check. The key stays here, never in the repo.
    - **Test copy:** `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before registration opens. Never add it to the live copy. Leave out `TURNSTILE_SECRET` so the demo, which can't run the check, still works.
 8. Copy the **Web app URL** (it ends in `/exec`).
-   - Test copy: put it in `.env` on your computer as `PUBLIC_SHEET_API_URL=<url>` (copy `.env.example` to `.env` first), then restart `npm run dev`. The form now writes to the test spreadsheet, and so does the demo built on your computer.
+   - Test copy: put it in `.env` on your computer as `PUBLIC_SHEET_API_URL=<url>` (copy `.env.example` to `.env` first), then restart `npm run dev`. The form now writes to the test spreadsheet, and so does the demo built on your computer (which is why the demo is never committed).
    - Live copy: in GitHub, **Settings → Secrets and variables → Actions → Secrets**, set `PUBLIC_SHEET_API_URL` to it, then run the deploy bot (README → "Going live").
 9. **Try it:** open the URL with `?form=mic-online-2027` on the end. The test copy says `{"ok":true,"open":true}`. Before 1 November the live copy says it "opens on 1 November 2026", as it should. Then send a test application from the site and check that a row appears in the tab "MIC Online 2027 (website)" and that the copy arrives by email.
 

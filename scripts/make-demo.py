@@ -1,6 +1,7 @@
 """Turn a built site (dist-demo/) into ONE self-contained HTML file for showing the client.
 
 Usage (from the repo root):  npm run demo   (npm run build and npm test also run it, so the demo stays current)
+The demo is never committed (demo/ is in .gitignore): it uses your own .env, which can hold your test web app URL.
   = astro build --base / --outDir dist-demo  +  python3 scripts/make-demo.py dist-demo demo/samathi101-demo.html
 
 Inlines the CSS, images (largest size up to 1000px for the page, plus the large
@@ -85,5 +86,6 @@ html = html.replace('href="/"', 'href="#"')
 leftover = re.findall(r'(?:src|href)="/(?!/)[^"]*"', html)
 if leftover:
     sys.exit(f"Demo not written: these files would be missing in it: {leftover}")
+out.parent.mkdir(parents=True, exist_ok=True)  # demo/ isn't in the repo: it's created on first build
 out.write_text(html)
 print(out, round(out.stat().st_size/1024), "KB")

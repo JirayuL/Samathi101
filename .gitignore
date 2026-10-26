@@ -10,3 +10,6 @@ dist/
 
 # local demo build
 dist-demo/
+# the single-file demo: built on your computer from your own .env and sent to the client directly.
+# Never committed: it can contain your test web app URL, which must stay off GitHub.
+demo/
