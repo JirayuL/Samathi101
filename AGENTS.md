@@ -165,7 +165,6 @@ MIC Online 2027 registration (the course being promoted):
 - If not done yet: update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
 - The "Verify you are human" check shows on the form but isn't enforced yet: the review site sends to the test script, which has no `TURNSTILE_SECRET`. The live script gets it (README → "Going live", step 2).
 - The live spreadsheet is, for now, Gear's "Samathi 101 registrations", with its own deployment of the script. Later, move it to the foundation's Google account, so the email copies come from the foundation and the data stays with it.
-- The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
 
 GitHub and Analytics:
 
