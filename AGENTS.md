@@ -5,7 +5,7 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 ## What this is
 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
-- **Hosted on GitHub Pages** from this repo, which is public because free GitHub Pages needs that. The review site is live at https://jirayul.github.io/Samathi101/; english.samathi101.com still shows the old Canva site until the domain switch. README → "Status" says where everything stands, README → "Going live" what's next.
+- **Hosted on GitHub Pages** from this repo, which is public because free GitHub Pages needs that. The review site is live at https://jirayul.github.io/samathi101/; english.samathi101.com still shows the old Canva site until the domain switch. README → "Status" says where everything stands, README → "Going live" what's next.
 - A static site built with **Astro**, so any static host can serve it. One page (`src/pages/index.astro`) with tabs: Home, Instructor Course (MIC Online, the course being promoted), Children Course, 7-Day Course, 1-Day Course, Contact Us, Register.
 - Applications for **MIC Online 2027** go through the site's own form into a **Google Sheet**, through a Google Apps Script web app. The other courses use their Google Forms. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
@@ -15,17 +15,17 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 Needs Node.js 22.22 or newer (the bots use the version in `.node-version`, 24), and Python 3 for the helper scripts (on Windows it may be called `py`). Anyone can read the repo; to push, ask Gear (JirayuL) to add you as a collaborator.
 
 ```bash
-git clone git@github.com:JirayuL/Samathi101.git
-cd Samathi101
+git clone git@github.com:JirayuL/samathi101.git
+cd samathi101
 npm ci                 # installs the exact versions in package-lock.json
-npm run dev            # http://localhost:4321/Samathi101/, reloads as you edit
+npm run dev            # http://localhost:4321/samathi101/, reloads as you edit
 ```
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Local preview while editing |
 | `npm test` | Checks the Apps Script without Google, builds the site into `dist/` and updates the demo, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
-| `npm run preview` | Serves the built `dist/` at http://localhost:4321/Samathi101/, the way a host would |
+| `npm run preview` | Serves the built `dist/` at http://localhost:4321/samathi101/, the way a host would |
 | `npm run build` | Builds the site into `dist/` and updates `demo/samathi101-demo.html`, the whole site in one file for showing the client |
 | `npm run demo` / `npm run check-links` | Only the demo, or only the link check |
 | `npm run mock-sheet` | A stand-in for the Google Sheet script at http://localhost:8787/exec, for testing the registration form without Google (see "Google Sheet") |
@@ -60,14 +60,14 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them. Tracking runs only after the visitor agrees: Google Analytics waits for "Allow analytics" (`src/components/Analytics.astro`), and anything new (a Meta Pixel, say) must go through the same banner. Never send names, emails or form answers to any tracker.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
 5. **Images go in `src/assets/`** with a real `alt` text, so Astro optimizes them. Use `public/` only for files served as-is (favicon, CNAME).
-6. **Paths:** the site is built for `/Samathi101/` until the domain switch (see `astro.config.mjs`). Don't hard-code links that start with `/`; use `#tab-id` links or `import.meta.env.BASE_URL`.
+6. **Paths:** the site is built for `/samathi101/` until the domain switch (see `astro.config.mjs`). GitHub Pages paths follow the repo's name and are case-sensitive: if the repo is ever renamed, change `base` in `astro.config.mjs` to match and deploy again. Don't hard-code links that start with `/`; use `#tab-id` links or `import.meta.env.BASE_URL`.
 7. **Desktop and mobile friendly, and accessible:** nothing scrolls sideways at 320px wide, tap targets at least 24px, working keyboard focus, real link text, text contrast at least 4.5:1.
 
 ## Test
 
 1. **`npm test`.** It must end with `Placeholder buttons (href="#"): none` and `In-page links with no target: none`. In the "External links" list, each Register button appears twice (its course tab and `register`) with the right form; README → "Registration links" has the list.
 2. **Look at what you changed**, in `npm run dev`, at desktop width and at phone width. In Chrome: DevTools (F12, or Cmd+Option+I on a Mac), then the device toolbar (Ctrl+Shift+M / Cmd+Shift+M), then iPhone SE (375px); also try 320px. Check that nothing scrolls sideways, the tab bar shows the active tab, buttons are easy to tap, and the Register buttons open the right form.
-3. **Changed images, fonts, paths or `astro.config.mjs`?** Also run `npm test && npm run preview`, look at the built site at http://localhost:4321/Samathi101/, and open `demo/samathi101-demo.html`: images, fonts and links must work in both.
+3. **Changed images, fonts, paths or `astro.config.mjs`?** Also run `npm test && npm run preview`, look at the built site at http://localhost:4321/samathi101/, and open `demo/samathi101-demo.html`: images, fonts and links must work in both.
 4. **Changed the registration form or the script?** Test it without Google ("Google Sheet" → "Testing"): send one application as a non-Thai and one as a Thai applicant, and try a missing answer. `npm test` also checks `Code.gs`.
 
 ## Demo
@@ -128,7 +128,8 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 | Problem | Fix |
 |---|---|
 | `astro: command not found` | Run `npm ci` first |
-| `localhost:4321` shows a 404 | The site lives under `/Samathi101/`: open http://localhost:4321/Samathi101/ |
+| https://jirayul.github.io/Samathi101/ (capital S) shows a 404 | The repo was renamed to `samathi101` on 27 Oct 2026 and the site moved with it: use https://jirayul.github.io/samathi101/. Update your copy's remote: `git remote set-url origin git@github.com:JirayuL/samathi101.git` |
+| `localhost:4321` shows a 404 | The site lives under `/samathi101/`: open http://localhost:4321/samathi101/ |
 | Port 4321 is busy | Astro picks the next free port; open the URL it prints |
 | `npm warn EBADENGINE` | Node is too old: install Node 24 (or 22.22 or newer) |
 | `python3: command not found` (Windows) | Install Python 3, or run the script with `py scripts/...` |
