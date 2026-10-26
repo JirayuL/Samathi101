@@ -3,6 +3,8 @@
  * An application form from src/data/registration.ts. It sends the answers to the Google Apps Script
  * web app at PUBLIC_SHEET_API_URL (apps-script/Code.gs), which saves them as one row in the Google Sheet.
  * While that URL is empty, the form shows a link to the Google Form instead of a submit button.
+ * PUBLIC_TURNSTILE_SITE_KEY (optional) adds Cloudflare's "Verify you are human" check above the button;
+ * the script checks it when its TURNSTILE_SECRET is set (apps-script/Code.gs).
  */
 import type { RegistrationForm, Field } from '../data/registration';
 
@@ -12,6 +14,7 @@ interface Props {
 
 const { form } = Astro.props;
 const api = (import.meta.env.PUBLIC_SHEET_API_URL ?? '').trim();
+const siteKey = (import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
 const id = (field: Field) => `${form.id}-${field.name}`;
 // Every question in order: the columns of the Sheet
 const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name, label: f.label })));
@@ -127,6 +130,9 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
           <label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
         </div>
 
+        <!-- "Verify you are human" (Cloudflare Turnstile): only with a site key, loaded when the form comes into view -->
+        <div class="apply__human" data-human data-sitekey={siteKey} hidden></div>
+
         <div class="apply__actions">
           <button class="apply__submit" type="submit" hidden={!api}>Submit application</button>
           <a class="apply__submit" href={form.googleFormUrl} target="_blank" rel="noopener" data-not-connected hidden={!!api}>
@@ -153,6 +159,8 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
 
 <script>
   type Column = { name: string; label: string };
+  type Turnstile = { render: (el: HTMLElement, options: object) => string; reset: (id?: string) => void };
+  const turnstile = () => (window as unknown as { turnstile?: Turnstile }).turnstile;
 
   for (const form of document.querySelectorAll<HTMLFormElement>('.apply__form')) setUp(form);
 
@@ -211,11 +219,42 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
         .join(', ');
     }
 
+    // "Verify you are human" (Cloudflare Turnstile). If it can't load (offline, blocked, a page opened
+    // from a file), the form still sends: the script decides, and refuses only when it requires the check.
+    const human = box.querySelector<HTMLElement>('[data-human]');
+    const siteKey = human?.dataset.sitekey ?? '';
+    let token = '';
+    let widget: string | undefined;
+    let humanFailed = false;
+
+    function loadHuman() {
+      if (!human || !siteKey || !api) return;
+      human.hidden = false;
+      const start = () => {
+        widget = turnstile()?.render(human, {
+          sitekey: siteKey,
+          theme: 'light',
+          size: human.clientWidth < 300 ? 'compact' : 'flexible', // the normal box is 300px wide
+          callback: (t: string) => ((token = t), (humanFailed = false)),
+          'expired-callback': () => (token = ''),
+          'error-callback': () => ((token = ''), (humanFailed = true)),
+        });
+      };
+      if (turnstile()) return start();
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.onload = start;
+      script.onerror = () => (humanFailed = true);
+      document.head.append(script);
+    }
+
     // Read: is registration still open? Asked once, when the form first comes into view.
     if (api) {
       const seen = new IntersectionObserver((entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         seen.disconnect();
+        loadHuman();
         fetch(`${api}?form=${encodeURIComponent(form.dataset.formId ?? '')}`)
           .then((r) => r.json())
           .then((s) => {
@@ -241,6 +280,12 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
         field(group.fields[0])?.setCustomValidity(empty ? group.message : '');
       }
       if (!form.reportValidity()) return;
+      if (siteKey && !token && !humanFailed) {
+        errorText.textContent = 'Please complete the "Verify you are human" check above the button, then send again.';
+        error.hidden = false;
+        human?.scrollIntoView({ block: 'center' });
+        return;
+      }
 
       const label = button.textContent;
       button.disabled = true;
@@ -254,6 +299,7 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
             website: data.get('website') ?? '',
             email: answer(data, 'email'),
             consent: answer(data, 'consent'),
+            turnstile: token,
             answers: columns.map((c) => [c.label, answer(data, c.name)]),
           }),
         });
@@ -268,8 +314,15 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
         const message = err instanceof Error ? err.message : '';
         errorText.textContent = /fetch|network|json|load|not saved/i.test(message) || !message
           ? 'Sorry, your application could not be sent. Please check your internet connection and try again.'
-          : message;
+          : humanFailed && /verify you are human/i.test(message)
+            ? 'The "Verify you are human" check could not load, so the application was not sent. Please reload the page and try again.'
+            : message;
         error.hidden = false;
+        // A check can be used once: ask for a fresh one before the next try
+        if (widget !== undefined) {
+          token = '';
+          turnstile()?.reset(widget);
+        }
       } finally {
         button.disabled = false;
         button.textContent = label;
@@ -405,6 +458,13 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
     width: 1px;
     height: 1px;
     overflow: hidden;
+  }
+  .apply__human {
+    margin-top: 32px;
+    min-height: 65px;
+  }
+  .apply__human + .apply__actions {
+    margin-top: 20px;
   }
   .apply__actions {
     margin-top: 36px;

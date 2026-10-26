@@ -1,11 +1,13 @@
 """A stand-in for the Google Apps Script web app (apps-script/Code.gs), for testing the site's
 registration form on your own computer without Google. Applications are printed here, not saved.
 
-Usage:  npm run mock-sheet                  (or: python3 scripts/mock-sheet-api.py [--closed] [--fail])
+Usage:  npm run mock-sheet                  (or: python3 scripts/mock-sheet-api.py [--closed] [--fail] [--human])
 Then in .env:  PUBLIC_SHEET_API_URL=http://localhost:8787/exec   and restart npm run dev.
 
   --closed   answer that registration has closed (the form greys out)
   --fail     refuse every application (to see the error message)
+  --human    refuse applications without a "Verify you are human" token, like the live script
+             with TURNSTILE_SECRET set (it doesn't ask Cloudflare whether the token is real)
 
 Like Apps Script, it doesn't answer the browser's CORS preflight, so a fetch that adds a
 Content-Type header fails here too.
@@ -18,6 +20,7 @@ sys.stdout.reconfigure(line_buffering=True)  # print each application straight a
 PORT = 8787
 CLOSED = "--closed" in sys.argv
 FAIL = "--fail" in sys.argv
+HUMAN = "--human" in sys.argv
 count = 0
 
 
@@ -59,8 +62,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply({"ok": False, "error": "Please enter a valid email address."})
         if data.get("consent") != "Agree":
             return self.reply({"ok": False, "error": "Please agree to the terms and conditions to apply."})
+        if HUMAN and not data.get("turnstile"):
+            return self.reply({"ok": False, "error": 'Please complete the "Verify you are human" check above the Submit button, then send again.'})
         count += 1
-        print(f"\n=== Application {count} for {data.get('form')} ===")
+        print(f"\n=== Application {count} for {data.get('form')} (human check token: {'yes' if data.get('turnstile') else 'no'}) ===")
         for question, answer in data.get("answers", []):
             print(f"  {question[:70]:70}  {answer!r}")
         self.reply({"ok": True, "emailed": True})
@@ -69,5 +74,5 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-print(f"Mock registration web app on http://localhost:{PORT}/exec" + (" (closed)" if CLOSED else "") + (" (failing)" if FAIL else ""))
+print(f"Mock registration web app on http://localhost:{PORT}/exec" + (" (closed)" if CLOSED else "") + (" (failing)" if FAIL else "") + (" (human check required)" if HUMAN else ""))
 ThreadingHTTPServer(("localhost", PORT), Handler).serve_forever()

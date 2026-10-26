@@ -3,13 +3,18 @@
  *
  * The site's application form (src/components/ApplyForm.astro) talks to this script:
  *   GET  ?form=<id>   -> { ok, open, message }   is registration open? (no personal data, ever)
- *   POST {form, website, email, consent, answers: [[question, answer], ...]}
+ *   POST {form, website, email, consent, turnstile, answers: [[question, answer], ...]}
  *                     -> { ok, emailed } or { ok: false, error }
  * Each application becomes one row in the tab named in FORMS, with one column per question.
  * The applicant gets a copy of their answers by email, like a Google Form receipt.
  *
  * Set up and update: apps-script/README.md. This file is the reviewed copy: change it here first,
  * then paste it into the Apps Script editor and deploy a new version.
+ *
+ * Settings that stay out of the repo (Apps Script editor -> Project Settings -> Script Properties):
+ *   TURNSTILE_SECRET      Cloudflare Turnstile secret key: applications need a passed "Verify you are human"
+ *                         check. Set it on the live copy. Without it the check is skipped (test copy, demo).
+ *   ALLOW_BEFORE_OPENING  yes = take applications before the opening date. Test copy only, never live.
  */
 
 /** One entry per form on the site. The key is the form's id in src/data/registration.ts. */
@@ -17,12 +22,14 @@ const FORMS = {
   'mic-online-2027': {
     title: 'MIC Online — Batch 1 (2027)',
     sheet: 'MIC Online 2027 (website)', // tab in this spreadsheet; created on the first application
-    closes: '2027-01-10', // last day applications are accepted, Bangkok time
+    opens: '2026-11-01', // first day applications are accepted, from 00:00 Bangkok time
+    closes: '2027-01-10', // last day applications are accepted, until 23:59 Bangkok time
     maxApplications: null, // a number here stops new applications once that many have arrived
   },
 };
 
 const REPLY_TO = 'wif.meditation@gmail.com';
+const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const SENDER_NAME = 'Willpower Institute Foundation';
 const LIMITS = { body: 60000, answers: 60, question: 500, answer: 5000 };
 
@@ -49,6 +56,9 @@ function doPost(e) {
 
   const problem = check_(data);
   if (problem) return json({ ok: false, error: problem });
+  if (!human_(data.turnstile)) {
+    return json({ ok: false, error: 'Please complete the "Verify you are human" check above the Submit button, then send again.' });
+  }
 
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return json({ ok: false, error: 'We are busy right now. Please try again in a minute.' });
@@ -90,10 +100,33 @@ function check_(data) {
   return '';
 }
 
+/** Asks Cloudflare whether the "Verify you are human" check was passed. Skipped when TURNSTILE_SECRET isn't set. */
+function human_(token) {
+  const secret = PropertiesService.getScriptProperties().getProperty('TURNSTILE_SECRET');
+  if (!secret) return true;
+  if (typeof token !== 'string' || !token || token.length > 2048) return false;
+  try {
+    const res = UrlFetchApp.fetch(TURNSTILE_VERIFY, {
+      method: 'post',
+      payload: { secret: secret, response: token },
+      muteHttpExceptions: true,
+    });
+    return JSON.parse(res.getContentText()).success === true;
+  } catch (err) {
+    return false; // Cloudflare unreachable: refuse rather than let bots through; the page offers the Google Form
+  }
+}
+
 /** Whether a form takes applications now. Never returns personal data: anyone can call doGet. */
 function status_(config) {
+  const now = new Date();
+  const opens = new Date(config.opens + 'T00:00:00+07:00');
+  const testCopy = PropertiesService.getScriptProperties().getProperty('ALLOW_BEFORE_OPENING') === 'yes';
+  if (now < opens && !testCopy) {
+    return { open: false, message: 'Registration for ' + config.title + ' opens on ' + longDate_(config.opens) + '.' };
+  }
   const closes = new Date(config.closes + 'T23:59:59+07:00');
-  if (new Date() > closes) return { open: false, message: 'Registration for ' + config.title + ' has closed.' };
+  if (now > closes) return { open: false, message: 'Registration for ' + config.title + ' has closed.' };
   if (config.maxApplications) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.sheet);
     const count = sheet ? Math.max(sheet.getLastRow() - 1, 0) : 0;
@@ -160,6 +193,13 @@ function sendCopy_(config, email, answers) {
     body: intro + '\n\n' + text + '\n\nQuestions? Reply to this email or write to ' + REPLY_TO + '.',
     htmlBody: '<p>' + escape_(intro) + '</p>' + html + '<p>Questions? Reply to this email or write to ' + REPLY_TO + '.</p>',
   });
+}
+
+/** '2026-11-01' -> '1 November 2026' */
+function longDate_(iso) {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const parts = iso.split('-').map(Number);
+  return parts[2] + ' ' + months[parts[1] - 1] + ' ' + parts[0];
 }
 
 function escape_(s) {
