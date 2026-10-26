@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 
 const code = fs.readFileSync(new URL('./Code.gs', import.meta.url), 'utf8');
 
-function makeEnv({ mailFails = false } = {}) {
+function makeEnv({ mailFails = false, props = {}, verify = () => ({ success: true }) } = {}) {
+  const verified = [];
   const sheets = {};
   const mails = [];
   function makeSheet(name) {
@@ -42,6 +43,14 @@ function makeEnv({ mailFails = false } = {}) {
       }),
     },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null }) },
+    UrlFetchApp: {
+      fetch: (url, opts) => {
+        verified.push({ url, ...opts.payload });
+        const out = verify(opts.payload);
+        return { getContentText: () => JSON.stringify(out) };
+      },
+    },
     MailApp: { sendEmail: (m) => { if (mailFails) throw new Error('quota'); mails.push(m); } },
     ContentService: {
       MimeType: { JSON: 'json' },
@@ -51,9 +60,11 @@ function makeEnv({ mailFails = false } = {}) {
   ctx.console = { error() {}, log() {} };
   vm.createContext(ctx);
   vm.runInContext(code, ctx);
+  // Tests must not depend on today's date: open the form wide unless a test sets its own dates
+  vm.runInContext("FORMS['mic-online-2027'].opens = '2000-01-01'; FORMS['mic-online-2027'].closes = '2099-12-31'", ctx);
   const out = (res) => JSON.parse(res.body);
   return {
-    ctx, sheets, mails,
+    ctx, sheets, mails, verified,
     get: (form) => out(ctx.doGet({ parameter: form ? { form } : {} })),
     post: (body) => out(ctx.doPost({ postData: { contents: typeof body === 'string' ? body : JSON.stringify(body) } })),
   };
@@ -150,6 +161,60 @@ test('maxApplications closes the form when full', () => {
   assert.equal(third.ok, false);
   assert.match(third.error, /is full/);
   assert.equal(env.get('mic-online-2027').open, false);
+});
+
+test('before the opening date: closed with the date, unless this is a test copy', () => {
+  const env = makeEnv();
+  vm.runInContext("FORMS['mic-online-2027'].opens = '2099-11-01'", env.ctx);
+  const s = env.get('mic-online-2027');
+  assert.equal(s.open, false);
+  assert.equal(s.message, 'Registration for MIC Online — Batch 1 (2027) opens on 1 November 2099.');
+  assert.match(env.post(base()).error, /opens on 1 November 2099/);
+  assert.equal(env.sheets[tab], undefined, 'nothing saved before opening');
+
+  const testCopy = makeEnv({ props: { ALLOW_BEFORE_OPENING: 'yes' } });
+  vm.runInContext("FORMS['mic-online-2027'].opens = '2099-11-01'", testCopy.ctx);
+  assert.equal(testCopy.get('mic-online-2027').open, true);
+  assert.equal(testCopy.post(base()).ok, true);
+});
+
+test('the real config opens 1 November 2026 and closes 10 January 2027, Bangkok time', () => {
+  const env = makeEnv();
+  const real = fs.readFileSync(new URL('./Code.gs', import.meta.url), 'utf8');
+  assert.match(real, /opens: '2026-11-01'/);
+  assert.match(real, /closes: '2027-01-10'/);
+  assert.equal(vm.runInContext("longDate_('2026-11-01')", env.ctx), '1 November 2026');
+});
+
+test('human check skipped when TURNSTILE_SECRET is not set (test copy, demo)', () => {
+  const env = makeEnv();
+  assert.equal(env.post(base()).ok, true);
+  assert.equal(env.verified.length, 0);
+});
+
+test('human check: with TURNSTILE_SECRET, a token Cloudflare accepts is needed', () => {
+  const props = { TURNSTILE_SECRET: 'secret-from-script-properties' };
+  const env = makeEnv({ props, verify: (p) => ({ success: p.response === 'good-token' }) });
+  assert.match(env.post(base()).error, /Verify you are human/, 'no token');
+  assert.match(env.post({ ...base(), turnstile: 'bad-token' }).error, /Verify you are human/, 'rejected token');
+  assert.match(env.post({ ...base(), turnstile: 'x'.repeat(3000) }).error, /Verify you are human/, 'oversized token');
+  assert.equal(env.sheets[tab], undefined, 'nothing saved without a passed check');
+  assert.deepEqual(env.post({ ...base(), turnstile: 'good-token' }), { ok: true, emailed: true });
+  const call = env.verified.at(-1);
+  assert.equal(call.url, 'https://challenges.cloudflare.com/turnstile/v0/siteverify');
+  assert.equal(call.secret, 'secret-from-script-properties');
+  assert.equal(call.response, 'good-token');
+});
+
+test('human check: Cloudflare unreachable means refuse, not accept', () => {
+  const env = makeEnv({ props: { TURNSTILE_SECRET: 's' }, verify: () => { throw new Error('network'); } });
+  assert.match(env.post({ ...base(), turnstile: 't' }).error, /Verify you are human/);
+  assert.equal(env.sheets[tab], undefined);
+});
+
+test('the manifest allows the call to Cloudflare', () => {
+  const manifest = JSON.parse(fs.readFileSync(new URL('./appsscript.json', import.meta.url), 'utf8'));
+  assert.ok(manifest.oauthScopes.includes('https://www.googleapis.com/auth/script.external_request'));
 });
 
 test('closing date passed', () => {

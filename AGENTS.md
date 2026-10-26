@@ -5,14 +5,14 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 ## What this is
 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
-- **Not published yet.** The repo is private (collaborators only), and the client sees the site through the single-file demo. README → "Hosting" covers what publishing needs.
+- **Hosted on GitHub Pages** from this repo, which is public because free GitHub Pages needs that. First as a review site at https://jirayul.github.io/Samathi101/; english.samathi101.com shows the old Canva site until the domain switch. README → "Going live" has the steps.
 - A static site built with **Astro**, so any static host can serve it. One page (`src/pages/index.astro`) with tabs: Home, Instructor Course (MIC Online, the course being promoted), Children Course, 7-Day Course, 1-Day Course, Contact Us, Register.
 - Applications for **MIC Online 2027** go through the site's own form into a **Google Sheet**, through a Google Apps Script web app. The other courses use their Google Forms. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
 
 ## Set up
 
-Needs Node.js 22.22 or newer (the bots use the version in `.node-version`, 24), and Python 3 for the helper scripts (on Windows it may be called `py`). The repo is private: ask Gear (JirayuL) to add you as a collaborator.
+Needs Node.js 22.22 or newer (the bots use the version in `.node-version`, 24), and Python 3 for the helper scripts (on Windows it may be called `py`). Anyone can read the repo; to push, ask Gear (JirayuL) to add you as a collaborator.
 
 ```bash
 git clone git@github.com:JirayuL/Samathi101.git
@@ -55,7 +55,7 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 ## Rules
 
 1. **Registration links stay as the foundation set them.** The courses use their Google Forms, except MIC Online 2027, which uses the site's own form (`src/data/registration.ts` → Google Sheet); its Google Form is the fallback. Don't change a link, a question or the consent text unless the foundation asks.
-2. **No secrets in the repo.** It is private now, but free GitHub Pages hosting would make it public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which is public by design.
+2. **No secrets in the repo.** The repo is public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which visitors' browsers can see; the live one is still kept out of the repo, as a GitHub secret.
 3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them, and don't add tracking (Pixel, Analytics) without a consent banner.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
 5. **Images go in `src/assets/`** with a real `alt` text, so Astro optimizes them. Use `public/` only for files served as-is (favicon, CNAME).
@@ -75,13 +75,18 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 - **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
 - **The demo's registration form** uses `PUBLIC_SHEET_API_URL` from your `.env` when you build it: the **test** Sheet's URL lets the client try it for real; with no URL (or the local stand-in), the form shows a link to the Google Form instead. Never build a demo with the live URL.
 
-## Publishing (not set up yet)
+## Publishing (GitHub Pages)
 
-Nothing is published while we wait for the client's new course and content, and there is no deploy bot for now. Merging into `main` only runs the check bot.
+The deploy bot (`.github/workflows/deploy.yml`) publishes `main` to GitHub Pages. For now it runs **only by hand**: GitHub → **Actions** → "Deploy to GitHub Pages" → Run workflow. Each run:
 
-Pull requests get the check bot (`check.yml`), which runs `npm test`, so a red X shows up before anything is merged. It takes about a minute, well inside the free Actions minutes a private repo gets each month.
+1. **build**: `npm test`, with the registration form's web app URL taken from the repository secret `PUBLIC_SHEET_API_URL`. If it fails, nothing is published and the live site keeps the previous version.
+2. **deploy**: publishes the build to GitHub Pages.
+3. **verify**: `scripts/smoke-test.py` on the live URL: the page, every tab, every image, font and stylesheet.
+4. **rollback**: only if verify fails. It rebuilds the last version that passed, publishes it and checks it again.
 
-When it's time to publish, README → "Hosting" lists the choices. A GitHub Pages deploy bot was written and then removed for now: it builds and runs `npm test`, publishes, checks the live site, and republishes the last version that passed if that check fails. To bring it back: `git fetch origin pull/1/head`, then `git checkout 8b2f262 -- .github/workflows/deploy.yml scripts/smoke-test.py`.
+A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it. To publish on every merge into `main`, remove the two `#` before `push:` at the top of `deploy.yml`.
+
+Pull requests get the check bot (`check.yml`), which runs `npm test`, so a red X shows up before anything is merged. First publish, the live Sheet and the domain switch: README → "Going live".
 
 ## Google Sheet (read and write)
 
@@ -92,15 +97,17 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 
 - **The pieces:** the questions are data in `src/data/registration.ts`, worded exactly like the Google Form, so the Sheet's columns line up with that form's responses. `src/components/ApplyForm.astro` shows them on the Register tab, and `apps-script/Code.gs` saves each application as one row and emails the applicant a copy.
 - **Read** (`GET ?form=<id>`): "open or closed" only, checked once when the form comes into view. Anyone can call the URL, so it never returns anyone's answers.
-- **Write** (`POST`): the page checks required answers, "LINE or WhatsApp" and "Other:" boxes. The script checks email, consent, sizes and the closing date again, drops spam (a hidden field people never fill in), and stores answers as plain text, so nothing typed can run as a formula.
+- **Write** (`POST`): the page checks required answers, "LINE or WhatsApp" and "Other:" boxes. The script checks email, consent, sizes and the opening and closing dates again, drops spam (a hidden field people never fill in), and stores answers as plain text, so nothing typed can run as a formula.
+- **"Verify you are human" (Cloudflare Turnstile, free):** with a site key in `PUBLIC_TURNSTILE_SITE_KEY`, the check shows above the Submit button. It's loaded from Cloudflare only when someone reaches the form. The script asks Cloudflare whether the check was passed when its Script Property `TURNSTILE_SECRET` is set (the live copy), and refuses the application if not. The secret key lives only in the script's settings. Without it (test copy, demo) the check is skipped, which matters because it can't run in a page opened from a file. For local testing, Cloudflare's test site key `1x00000000000000000000AA` always passes.
 - **No headers on the fetch:** `fetch(url, { method: 'POST', body: JSON.stringify(data) })`. Adding `Content-Type: application/json` makes the browser ask Apps Script for permission first (a CORS preflight), which Apps Script can't answer, so the call fails.
 - **Set up, update, close registration:** step by step in `apps-script/README.md`. Change `Code.gs` here first, then paste it into the Apps Script editor and deploy a **new version** of the same deployment, so the URL stays the same.
+- **Opening and closing:** registration opens on 1 November 2026 at 00:00 and closes on 10 January 2027 at 23:59, Bangkok time (`opens` and `closes` in `FORMS`). Before it opens, the form says "opens on 1 November 2026" and stays greyed out. A **test** copy can skip the opening date with the Script Property `ALLOW_BEFORE_OPENING` = `yes`; never set it on the live copy.
 - **Test and live copies.** A test spreadsheet with its own script deployment for development and demos, and the live one. The page reads the URL from `PUBLIC_SHEET_API_URL`:
   - on your computer: copy `.env.example` to `.env` and put the **test** URL in it (`.env` is never committed), then restart `npm run dev`;
-  - for the published site: the **live** URL as a build setting on the host that publishes it (with a GitHub Actions deploy: Settings → Secrets and variables → Actions → **Variables** → `PUBLIC_SHEET_API_URL`).
+  - for the published site: the **live** URL as the repository **secret** `PUBLIC_SHEET_API_URL` (Settings → Secrets and variables → Actions → **Secrets**); the deploy bot puts it into the page when it builds. Visitors' browsers can still see it, as on any static site. That's safe: the script only takes applications and answers "open or closed".
   - With no URL, the form shows a link to the Google Form instead of its submit button.
-- **Testing without Google:** run `npm run mock-sheet` and set `PUBLIC_SHEET_API_URL=http://localhost:8787/exec` in `.env`, then restart `npm run dev` (in Claude Code: start `mock-sheet`, then `dev-mock`). Applications are printed in the `mock-sheet` window. `npm run mock-sheet -- --closed` shows the "closed" state and `-- --fail` the error message.
-- **Privacy:** share the spreadsheet only with the people who handle registrations. Don't add questions, tracking or logging of answers.
+- **Testing without Google:** run `npm run mock-sheet` and set `PUBLIC_SHEET_API_URL=http://localhost:8787/exec` in `.env`, then restart `npm run dev` (in Claude Code: start `mock-sheet`, then `dev-mock`). Applications are printed in the `mock-sheet` window. `npm run mock-sheet -- --closed` shows the "closed" state, `-- --fail` the error message, and `-- --human` refuses applications without a passed human check. `dev-mock` also turns on the check with Cloudflare's always-pass test key.
+- **Privacy:** share the spreadsheet only with the people who handle registrations. Don't add questions, tracking or logging of answers. The human check is a security measure from Cloudflare, loaded only on the form, not tracking.
 
 ## Troubleshooting
 
@@ -113,6 +120,8 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 | `python3: command not found` (Windows) | Install Python 3, or run the script with `py scripts/...` |
 | The form says it "isn't connected" | `PUBLIC_SHEET_API_URL` is empty: put the test URL (or the local stand-in) in `.env` and restart `npm run dev` |
 | "Your application could not be sent" while testing | Is `npm run mock-sheet` running, or is the Apps Script URL right? Open the URL with `?form=mic-online-2027`: it should say `"open":true` |
+| "Please complete the Verify you are human check" | The check above the button hasn't finished, or couldn't load (offline, an ad blocker). Reload the page. On the live copy, check that the site key (GitHub variable) and `TURNSTILE_SECRET` (Script Property) come from the same Turnstile widget, and that the widget lists the site's hostname |
+| The form says "opens on 1 November 2026" | Expected before the opening date. On a **test** copy, add the Script Property `ALLOW_BEFORE_OPENING` = `yes` |
 | The Sheet suddenly has a second, similar column | A question's wording changed in `registration.ts`; new answers go to the new column. Merge the two by hand if needed |
 | `Demo not written: these files would be missing in it` | Something links a file with a path starting with `/`. Put images in `src/assets/` and import them, or use `import.meta.env.BASE_URL` (rule 6) |
 
@@ -131,19 +140,22 @@ The same list is in README → "Open items"; when you finish or add one, update 
 
 Content to confirm with the foundation:
 
-- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
-- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 - The MIC Online poster spells the founder's title "Somdet Phra Nyanavajirodome"; the site and the Google Form use "Nyanavajirodom".
 
 Design (needs approval, rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under 4.5:1. It is used for tab labels, the Register tab summaries and small labels.
 
-Hosting: decide how and when to publish (README → "Hosting"). Until then the site is private and shown with the single-file demo.
+Going live: README → "Going live": first the review site on GitHub Pages for the client, then the live Sheet, then the domain switch.
 
-MIC Online 2027 registration:
+MIC Online 2027 registration (the course being promoted):
 
-- Set up the Apps Script (`apps-script/README.md`): the **test** copy now, so the client can try the form in the demo, and the **live** copy before the site is published. Until then the form links to the Google Form.
-- Decide where applications go: the live script can sit in the spreadsheet that already collects the Google Form's answers, so both arrive in one file, in two tabs.
+- Update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- The live spreadsheet is, for now, Gear's "Samathi 101 registrations", with its own deployment of the script. Later, move it to the foundation's Google account, so the email copies come from the foundation and the data stays with it.
 - The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
+
+Other courses (not a priority now; the focus is MIC Online):
+
+- The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
+- Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
 
 ## Planned work
 

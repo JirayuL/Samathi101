@@ -1,0 +1,126 @@
+# The deploy bot. When it runs it:
+#   1. build     builds the site and runs the link check (npm test).
+#                If this fails, nothing is published: the live site stays as it was.
+#   2. deploy    publishes the checked build to GitHub Pages.
+#   3. verify    checks the live site (scripts/smoke-test.py): the page, every tab, every file loads.
+#   4. rollback  only if verify fails: rebuilds the last version that passed and publishes it again.
+# A failed run shows a red X in the Actions tab, and GitHub emails whoever started it.
+#
+# For now the bot runs only by hand: Actions -> "Deploy to GitHub Pages" -> Run workflow.
+# To deploy on every merge to main, remove the two # below.
+#
+# The registration form's web app URL comes from the repository secret PUBLIC_SHEET_API_URL
+# (Settings -> Secrets and variables -> Actions -> Secrets), so it is never in the code.
+# Without the secret, the form links to the Google Form instead.
+# The "Verify you are human" check (Cloudflare Turnstile) takes its public site key from the
+# repository variable PUBLIC_TURNSTILE_SITE_KEY (Variables tab); empty = no check shown.
+# https://docs.astro.build/en/guides/deploy/github/
+name: Deploy to GitHub Pages
+
+on:
+  # push:
+  #   branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read # rollback looks up the last run that passed
+
+# One deploy at a time; a newer push waits for the current one to finish
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Build and check links
+        run: npm test
+        env:
+          PUBLIC_SHEET_API_URL: ${{ secrets.PUBLIC_SHEET_API_URL }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the live site
+        run: python3 scripts/smoke-test.py "${{ needs.deploy.outputs.page_url }}"
+
+  rollback:
+    needs: verify
+    if: failure() && needs.verify.result == 'failure'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Find the last version that passed
+        id: last-good
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow deploy.yml --branch main \
+                --status success --limit 1 --json headSha --jq '.[0].headSha // empty')
+          if [ -z "$sha" ]; then
+            echo "::error::No earlier deploy passed, so there is nothing to roll back to. Fix main and push again."
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Live site check failed for ${GITHUB_SHA::7}; rolling back to ${sha::7}." >> "$GITHUB_STEP_SUMMARY"
+      # This commit's scripts (the check), and the last good version's site
+      - uses: actions/checkout@v7
+        with:
+          path: current
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.last-good.outputs.sha }}
+          path: site
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: site/.node-version
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Build the last good version
+        working-directory: site
+        run: npm ci && npm run build
+        env:
+          PUBLIC_SHEET_API_URL: ${{ secrets.PUBLIC_SHEET_API_URL }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/dist/
+          name: github-pages-rollback
+      - name: Publish it to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-rollback
+      - name: Check the live site again
+        run: python3 current/scripts/smoke-test.py "${{ steps.deployment.outputs.page_url }}"
