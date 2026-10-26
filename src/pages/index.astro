@@ -8,10 +8,12 @@ import Divider from '../components/Divider.astro';
 import About from '../components/About.astro';
 import Contact from '../components/Contact.astro';
 import Register from '../components/Register.astro';
+import ApplyForm from '../components/ApplyForm.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { courses } from '../data/courses';
 import { tabs } from '../data/tabs';
+import { registrationForms } from '../data/registration';
 ---
 
 <Base>
@@ -34,7 +36,12 @@ import { tabs } from '../data/tabs';
           ) : t.id === 'contact' ? (
             <Contact />
           ) : t.id === 'register' ? (
-            <Register />
+            <>
+              <Register />
+              {registrationForms.map((form) => (
+                <ApplyForm form={form} />
+              ))}
+            </>
           ) : (
             courses
               .filter((c) => c.tab === t.id)

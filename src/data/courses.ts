@@ -35,6 +35,7 @@ export interface Course {
   tab: TabId; // which tab this course appears under (see tabs.ts)
   title: string;
   status: Status;
+  /** Optional: without images or a youtubeId, the course shows as text only. */
   images?: CourseImage[];
   /** YouTube video ID (the part after watch?v=). When set, replaces the images with an embedded video. */
   youtubeId?: string;
@@ -156,6 +157,70 @@ export const courses: Course[] = [
     ],
   },
   {
+    id: 'mic-online-2027',
+    tab: 'instructor',
+    summary: ['Online, 23 January – 27 June 2027', 'Register 1 November – 31 December 2026', 'Free, about 75 places'],
+    title: 'FREE Online Meditation Instructor Course (6 Months) | MIC Online Batch 1, 2027',
+    status: 'open',
+    // No poster yet, so the course shows as text only
+    paragraphs: [
+      'For the first time, the Willpower Institute Foundation is offering its English-language Meditation Instructor Course (MIC) online, so you can learn and practice wherever you live. Begin a lifelong journey towards inner peace, and help bring peace to the world.',
+      'MIC is based on the teachings of the late Somdet Phra Nyanavajirodom (Luangphor Viriyang Sirintharo), a renowned meditation master and founder of the Willpower Institute Foundation. It combines structured theory with systematic meditation practice.',
+    ],
+    facts: [
+      { label: 'Duration', value: '23 January – 27 June 2027' },
+      { label: 'Registration', value: '1 November – 31 December 2026\nLate registration 1–10 January 2027, if places remain' },
+      { label: 'Places', value: 'About 75 participants' },
+      { label: 'Fee', value: 'Free of charge' },
+      { label: 'Orientation', value: 'Saturday 23 January 2027, 19:30–21:00, on Zoom' },
+      {
+        label: 'Weekly live session',
+        value: 'Saturday 19:30–21:00 or Sunday 10:00–11:30\nChoose one as your main session; join the other in weeks you miss it',
+      },
+      { label: 'Written exam', value: '26–27 June 2027' },
+      { label: 'Field exam (optional)', value: 'Doi Inthanon, Chiang Mai, late November or early December 2027' },
+    ],
+    afterFacts: ['All times are Bangkok time (UTC+7).'],
+    sections: [
+      {
+        heading: 'How You Will Learn',
+        text: 'Study the lectures on your own each day through an online learning platform, and practice walking and sitting meditation. Once a week, join a live online session with the instructors.',
+      },
+      {
+        heading: 'What You Will Gain',
+        items: [
+          'A step-by-step meditation practice',
+          'Inner peace and emotional balance',
+          'Personal virtues',
+          'The confidence to guide family, friends and others in meditation',
+          'A thorough understanding of meditation theory and practice',
+        ],
+      },
+      {
+        heading: 'Who Is It For?',
+        text: 'No prior meditation experience is required, and beginners are welcome.',
+        items: [
+          'People of all ages, genders, faiths and nationalities',
+          'Anyone with moderate English, including Thai participants',
+          'Those who have never enrolled in the Thai-language MIC (Kru Samadhi course)',
+          'Those in good mental health, with the patience and commitment to learn',
+        ],
+      },
+    ],
+    links: [
+      {
+        label: 'Download the course schedule (January–June 2027)',
+        href: 'https://drive.google.com/file/d/19UCFAji7vxG7bX52oh-vtgDkGhcH826E/view?usp=sharing',
+      },
+    ],
+    enrollNote: 'Enroll now - 31 December 2026',
+    buttons: [
+      // The application form on this site (src/data/registration.ts). It links to the Google Form
+      // forms.gle/sPF3JG52DH9VHdRw5 while the Google Sheet isn't connected.
+      { label: 'Register', sub: 'MIC Online 2027', href: '#apply-mic-online-2027', style: 'primary' },
+    ],
+  },
+  {
     id: 'meditation-instructor-course',
     tab: 'instructor',
     summary: ['Six months, May–October 2026', 'Thailand, Jakarta and Los Angeles', 'Free'],
@@ -185,9 +250,9 @@ export const courses: Course[] = [
       },
     ],
     closedNote: {
-      text: ['Registration deadline for MIC Batch 3 for the year 2026 has passed.', 'See you again next year.'],
-      linkLabel: 'Please join a 1-day course.',
-      linkHref: '#one-day-bangkok-pattaya',
+      text: ['Registration deadline for MIC Batch 3 for the year 2026 has passed.', 'The next MIC is online, January–June 2027.'],
+      linkLabel: 'See MIC Online Batch 1 (2027)',
+      linkHref: '#mic-online-2027',
     },
     // forms.gle/VA9aqUrcUoFoeZ1u7 = "2026 Meditation Instructor Course USA Application Form" (closed).
     // When registration reopens: set status to 'open' and add

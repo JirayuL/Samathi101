@@ -15,7 +15,8 @@ path = sys.argv[1] if len(sys.argv) > 1 else "dist/index.html"
 html = open(path, encoding="utf-8").read()
 
 ids = set(re.findall(r'\sid="([^"]+)"', html))
-section_starts = [(m.start(), m.group(1)) for m in re.finditer(r'<(?:section|div)\b[^>]*\sid="([^"]+)"', html)]
+# "Where" a link is: the nearest section or tab panel before it
+section_starts = [(m.start(), m.group(1)) for m in re.finditer(r'<(?:section|div(?=[^>]*role="tabpanel"))\b[^>]*\sid="([^"]+)"', html)]
 
 def where(pos):
     before = [i for (start, i) in section_starts if start < pos]

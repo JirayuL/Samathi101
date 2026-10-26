@@ -7,7 +7,7 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
 - **Not published yet.** The repo is private (collaborators only), and the client sees the site through the single-file demo. README → "Hosting" covers what publishing needs.
 - A static site built with **Astro**, so any static host can serve it. One page (`src/pages/index.astro`) with tabs: Home, Children Course, 7-Day Course, 1-Day Course, Instructor Course, Contact Us, Register.
-- Data that people send or that changes often (registrations, later live course info) goes to a **Google Sheet** through a Google Apps Script web app. See "Google Sheet" below.
+- Applications for **MIC Online 2027** go through the site's own form into a **Google Sheet**, through a Google Apps Script web app. The other courses use their Google Forms. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
 
 ## Set up
@@ -24,12 +24,13 @@ npm run dev            # http://localhost:4321/Samathi101/, reloads as you edit
 | Command | What it does |
 |---|---|
 | `npm run dev` | Local preview while editing |
-| `npm test` | Builds the site into `dist/` and updates the demo, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
+| `npm test` | Checks the Apps Script without Google, builds the site into `dist/` and updates the demo, then runs the link check: lists every link and where it appears, and fails on `#` placeholders or broken in-page links. Must pass before you push; the bots run the same command |
 | `npm run preview` | Serves the built `dist/` at http://localhost:4321/Samathi101/, the way a host would |
 | `npm run build` | Builds the site into `dist/` and updates `demo/samathi101-demo.html`, the whole site in one file for showing the client |
 | `npm run demo` / `npm run check-links` | Only the demo, or only the link check |
+| `npm run mock-sheet` | A stand-in for the Google Sheet script at http://localhost:8787/exec, for testing the registration form without Google (see "Google Sheet") |
 
-Using Claude Code? `.claude/launch.json` has the `dev` and `preview` servers ready for the preview pane.
+Using Claude Code? `.claude/launch.json` has `dev`, `preview`, `mock-sheet`, and `dev-mock` (the dev server wired to `mock-sheet`; macOS and Linux) ready for the preview pane.
 
 ## Where to make changes
 
@@ -43,14 +44,17 @@ Content lives in `src/data/`. Components only lay it out, so most edits never to
 | Hero text, quote, contact details | `src/data/site.ts` |
 | Colors, fonts, spacing | `src/styles/global.css` (`:root` variables) |
 | A course image | Put it in `src/assets/courses/`, import it at the top of `courses.ts` |
-| What the check bot checks | `scripts/check-links.py` |
+| A registration form's questions and texts | `src/data/registration.ts` |
+| How the form looks and sends | `src/components/ApplyForm.astro` |
+| What happens to an application (Sheet row, email copy, closing date) | `apps-script/Code.gs`, then deploy a new version (`apps-script/README.md`) |
+| What the check bot checks | `scripts/check-links.py`, `apps-script/Code.test.mjs` |
 | The check bot itself | `.github/workflows/check.yml` |
 
 Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it automatically. Each course's Register button shows on its own tab and on the Register tab, both from the same entry, so one edit changes both.
 
 ## Rules
 
-1. **Existing courses keep their Google Forms.** Do not change those registration links unless the foundation asks. Only the **new course** gets the on-site registration page (website → Google Sheet).
+1. **Registration links stay as the foundation set them.** The courses use their Google Forms, except MIC Online 2027, which uses the site's own form (`src/data/registration.ts` → Google Sheet); its Google Form is the fallback. Don't change a link, a question or the consent text unless the foundation asks.
 2. **No secrets in the repo.** It is private now, but free GitHub Pages hosting would make it public, and the site's code reaches every visitor anyway. So: no passwords, API keys, or links to the Google Sheet itself. The site reaches the Sheet only through the Apps Script web app URL, which is public by design.
 3. **Personal data (Thailand's PDPA).** Registration collects personal details, including children's. Ask only for what the course needs, keep consent wording on forms, never send registrations back to the page or log them, and don't add tracking (Pixel, Analytics) without a consent banner.
 4. **Keep the look.** Use the color and font variables in `global.css`. Fonts are Taviraj and Sarabun, which both support Thai. No new fonts, colors or UI libraries without asking.
@@ -63,12 +67,13 @@ Course `status` is `open`, `coming-soon` or `closed`; the buttons follow it auto
 1. **`npm test`.** It must end with `Placeholder buttons (href="#"): none` and `In-page links with no target: none`. In the "External links" list, each Register button appears twice (its course tab and `register`) with the right form; README → "Registration links" has the list.
 2. **Look at what you changed**, in `npm run dev`, at desktop width and at phone width. In Chrome: DevTools (F12, or Cmd+Option+I on a Mac), then the device toolbar (Ctrl+Shift+M / Cmd+Shift+M), then iPhone SE (375px); also try 320px. Check that nothing scrolls sideways, the tab bar shows the active tab, buttons are easy to tap, and the Register buttons open the right form.
 3. **Changed images, fonts, paths or `astro.config.mjs`?** Also run `npm test && npm run preview`, look at the built site at http://localhost:4321/Samathi101/, and open `demo/samathi101-demo.html`: images, fonts and links must work in both.
+4. **Changed the registration form or the script?** Test it without Google ("Google Sheet" → "Testing"): send one application as a non-Thai and one as a Thai applicant, and try a missing answer. `npm test` also checks `Code.gs`.
 
 ## Demo
 
-- **Single file:** send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except the Google Sheet and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` updates the demo, so commit it with every change. While the site isn't published, this is how the client sees it.
+- **Single file:** send `demo/samathi101-demo.html` over LINE or email. It opens in any browser and works offline, except the registration form and the course video. YouTube refuses to play videos inside a page opened from a file (Error 153), so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` updates the demo, so commit it with every change. While the site isn't published, this is how the client sees it.
 - **On your own computer:** `npm run dev`, or `npm test && npm run preview` for the built version.
-- Demos of the Google Sheet features use the **test** Sheet (below), never the live one.
+- **The demo's registration form** uses `PUBLIC_SHEET_API_URL` from your `.env` when you build it: the **test** Sheet's URL lets the client try it for real; with no URL (or the local stand-in), the form shows a link to the Google Form instead. Never build a demo with the live URL.
 
 ## Publishing (not set up yet)
 
@@ -82,19 +87,20 @@ When it's time to publish, README → "Hosting" lists the choices. A GitHub Page
 
 ```
 visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Google Sheet (private)
-(the published page)  ◀─ JSON ─  (runs as the foundation's Google account)
+(Register tab form)  ◀─ JSON ─  (apps-script/Code.gs, runs as the foundation's account)
 ```
 
-- The Sheet stays private, shared only with the people who handle registrations. The page holds no key: it calls the web app URL, and the script reads or writes the Sheet as the foundation's account.
-- **Write** (`doPost`): append one registration row. Check every field in the script as well as in the page, add a hidden "honeypot" field to catch spam bots, and wrap the write in `LockService` so two people registering at the same moment don't clash.
-- **Read** (`doGet`): return only public data, such as course status or seats left. Anyone can call the URL, so it must never return registrations or other personal data.
-- **From the page:** use `fetch(url)` to read and `fetch(url, { method: 'POST', body: JSON.stringify(data) })` to write, with no custom headers. Adding `Content-Type: application/json` makes the browser ask Apps Script for permission first (a CORS preflight), which Apps Script can't answer, so the call fails. A call takes a second or two: show "Sending…" and a clear message if it fails.
-- **Script code** goes in `apps-script/` in this repo (create the folder with the feature) and is pasted into the Apps Script editor (open the Sheet, then Extensions → Apps Script), so script changes get reviewed like everything else. A script created from the Sheet uses `SpreadsheetApp.getActiveSpreadsheet()`, so no Sheet ID or link goes into the code.
-- **Deploy settings:** Deploy → New deployment → Web app, "Execute as: Me" (the foundation account), "Who has access: Anyone".
-- **Test and live copies.** Keep a test Sheet with its own script deployment for development and demos, next to the live one. The page reads the URL from `PUBLIC_SHEET_API_URL`:
-  - on your computer: copy `.env.example` to `.env` and put the **test** URL in it (`.env` is never committed);
+- **The pieces:** the questions are data in `src/data/registration.ts`, worded exactly like the Google Form, so the Sheet's columns line up with that form's responses. `src/components/ApplyForm.astro` shows them on the Register tab, and `apps-script/Code.gs` saves each application as one row and emails the applicant a copy.
+- **Read** (`GET ?form=<id>`): "open or closed" only, checked once when the form comes into view. Anyone can call the URL, so it never returns anyone's answers.
+- **Write** (`POST`): the page checks required answers, "LINE or WhatsApp" and "Other:" boxes. The script checks email, consent, sizes and the closing date again, drops spam (a hidden field people never fill in), and stores answers as plain text, so nothing typed can run as a formula.
+- **No headers on the fetch:** `fetch(url, { method: 'POST', body: JSON.stringify(data) })`. Adding `Content-Type: application/json` makes the browser ask Apps Script for permission first (a CORS preflight), which Apps Script can't answer, so the call fails.
+- **Set up, update, close registration:** step by step in `apps-script/README.md`. Change `Code.gs` here first, then paste it into the Apps Script editor and deploy a **new version** of the same deployment, so the URL stays the same.
+- **Test and live copies.** A test spreadsheet with its own script deployment for development and demos, and the live one. The page reads the URL from `PUBLIC_SHEET_API_URL`:
+  - on your computer: copy `.env.example` to `.env` and put the **test** URL in it (`.env` is never committed), then restart `npm run dev`;
   - for the published site: the **live** URL as a build setting on the host that publishes it (with a GitHub Actions deploy: Settings → Secrets and variables → Actions → **Variables** → `PUBLIC_SHEET_API_URL`).
-- **Updating the script:** Deploy → Manage deployments → edit (pencil) → Version: New version. This keeps the same URL. "New deployment" creates a new URL, which then has to be updated in `.env` and in the live build setting.
+  - With no URL, the form shows a link to the Google Form instead of its submit button.
+- **Testing without Google:** run `npm run mock-sheet` and set `PUBLIC_SHEET_API_URL=http://localhost:8787/exec` in `.env`, then restart `npm run dev` (in Claude Code: start `mock-sheet`, then `dev-mock`). Applications are printed in the `mock-sheet` window. `npm run mock-sheet -- --closed` shows the "closed" state and `-- --fail` the error message.
+- **Privacy:** share the spreadsheet only with the people who handle registrations. Don't add questions, tracking or logging of answers.
 
 ## Troubleshooting
 
@@ -105,6 +111,9 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 | Port 4321 is busy | Astro picks the next free port; open the URL it prints |
 | `npm warn EBADENGINE` | Node is too old: install Node 24 (or 22.22 or newer) |
 | `python3: command not found` (Windows) | Install Python 3, or run the script with `py scripts/...` |
+| The form says it "isn't connected" | `PUBLIC_SHEET_API_URL` is empty: put the test URL (or the local stand-in) in `.env` and restart `npm run dev` |
+| "Your application could not be sent" while testing | Is `npm run mock-sheet` running, or is the Apps Script URL right? Open the URL with `?form=mic-online-2027`: it should say `"open":true` |
+| The Sheet suddenly has a second, similar column | A question's wording changed in `registration.ts`; new answers go to the new column. Merge the two by hand if needed |
 | `Demo not written: these files would be missing in it` | Something links a file with a path starting with `/`. Put images in `src/assets/` and import them, or use `import.meta.env.BASE_URL` (rule 6) |
 
 ## Before you push
@@ -116,7 +125,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 
 Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review.
 
-## Open items (22 Oct 2026)
+## Open items (26 Oct 2026)
 
 The same list is in README → "Open items"; when you finish or add one, update both.
 
@@ -129,8 +138,13 @@ Design (needs approval, rule 4): the grey `--forest-mute` text is 4.35:1 on the 
 
 Hosting: decide how and when to publish (README → "Hosting"). Until then the site is private and shown with the single-file demo.
 
+MIC Online 2027 registration:
+
+- Set up the Apps Script (`apps-script/README.md`): the **test** copy now, so the client can try the form in the demo, and the **live** copy before the site is published. Until then the form links to the Google Form.
+- Decide where applications go: the live script can sit in the spreadsheet that already collects the Google Form's answers, so both arrive in one file, in two tabs.
+- The course has no image yet. The Google Form has a "COURSE OVERVIEW" poster (740 × 1110); a copy in `src/assets/courses/` would replace the text-only layout.
+
 ## Planned work
 
-- Registration page for the new course (starts 1 Nov 2026) → Google Sheet via Apps Script (see above), demoed to the client with the test Sheet before going live
 - Meta Pixel and Google Analytics with a consent banner, to see where people come from and what they register for
 - SEO: share image, structured data for courses, sitemap and robots.txt, Search Console after the domain switch
