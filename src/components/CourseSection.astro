@@ -147,7 +147,9 @@ const media = await Promise.all(
         {course.status === 'coming-soon' && <Button label="Dates coming soon" disabled />}
         {
           course.status === 'open' &&
-            course.buttons?.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} />)
+            course.buttons?.map((b) => (
+              <Button href={b.href} label={b.label} sub={b.sub} style={b.style} course={b.kind === 'download' ? undefined : course.id} />
+            ))
         }
       </div>
     </div>

@@ -14,6 +14,8 @@
 # Without the secret, the form links to the Google Form instead.
 # The "Verify you are human" check (Cloudflare Turnstile) takes its public site key from the
 # repository variable PUBLIC_TURNSTILE_SITE_KEY (Variables tab); empty = no check shown.
+# Google Analytics takes its measurement ID (G-...) from the repository variable PUBLIC_GA_MEASUREMENT_ID;
+# empty = no analytics and no cookie banner. It only runs after a visitor clicks "Allow analytics".
 # https://docs.astro.build/en/guides/deploy/github/
 name: Deploy to GitHub Pages
 
@@ -48,6 +50,7 @@ jobs:
         env:
           PUBLIC_SHEET_API_URL: ${{ secrets.PUBLIC_SHEET_API_URL }}
           PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+          PUBLIC_GA_MEASUREMENT_ID: ${{ vars.PUBLIC_GA_MEASUREMENT_ID }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist/
@@ -113,6 +116,7 @@ jobs:
         env:
           PUBLIC_SHEET_API_URL: ${{ secrets.PUBLIC_SHEET_API_URL }}
           PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
+          PUBLIC_GA_MEASUREMENT_ID: ${{ vars.PUBLIC_GA_MEASUREMENT_ID }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist/

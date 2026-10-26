@@ -78,6 +78,7 @@ src/
     Divider.astro     ← small lotus between hairlines
     Register.astro    ← Register tab: every course with its sign-up buttons
     ApplyForm.astro   ← a registration form (Register tab): checks answers, sends them to the Sheet
+    Analytics.astro   ← cookie banner and Google Analytics (only after "Allow analytics")
     Lightbox.astro    ← click-to-preview for posters and photos
     CourseSection.astro  ← layout for every course block (image left, text right)
     Button.astro
@@ -174,6 +175,7 @@ The site goes live in three steps, each one checked before the next. The deploy 
 - [ ] Change the secret `PUBLIC_SHEET_API_URL` to the **live** script's URL, then run the deploy bot again.
 - [ ] Before 1 November the form says "opens on 1 November 2026"; from then on it takes applications. Send one marked TEST, check the row and the email copy, then delete the row.
 - [ ] Delete the test rows in the TEST sheet.
+- [ ] **Google Analytics** (optional, free): at analytics.google.com, create a GA4 property "Samathi 101" (time zone Bangkok) with a **Web** data stream for `english.samathi101.com`, and copy its **Measurement ID** (`G-…`). In GitHub, **Settings → Secrets and variables → Actions → Variables:** `PUBLIC_GA_MEASUREMENT_ID` = that ID, then run the deploy bot. The site then shows the cookie banner, and Analytics counts only visitors who allow it (AGENTS.md → "Analytics").
 
 ### 3. Switch english.samathi101.com (pick a quiet time)
 
