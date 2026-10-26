@@ -11,9 +11,10 @@
     "dev": "astro dev",
     "build": "astro build && npm run demo",
     "preview": "astro preview",
-    "test": "npm run build && npm run check-links",
+    "test": "node apps-script/Code.test.mjs && npm run build && npm run check-links",
     "check-links": "python3 scripts/check-links.py dist/index.html",
     "demo": "astro build --base / --outDir dist-demo && python3 scripts/make-demo.py dist-demo demo/samathi101-demo.html",
+    "mock-sheet": "python3 scripts/mock-sheet-api.py",
     "astro": "astro"
   },
   "dependencies": {
