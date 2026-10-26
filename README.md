@@ -31,7 +31,7 @@ GitHub repo (public) ── deploy bot ──▶ GitHub Pages: the site
 |---|---|
 | Review site | **Live** at https://jirayul.github.io/Samathi101/ (GitHub Pages). Published by hand with the deploy bot after each merge |
 | english.samathi101.com | Still the old Canva site, until "Going live" step 3 |
-| Repo | **Public**. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, with no force-pushes and no deleting `main` (repo admins can bypass). The check bot isn't required by it yet |
+| Repo | **Public**. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked (repo admins can bypass) |
 | MIC Online registration form | On the site, sending to the **test** script and the TEST sheet for now (secret `PUBLIC_SHEET_API_URL`); the live Sheet comes in "Going live" step 2 |
 | "Verify you are human" | Cloudflare Turnstile widget "Samathi 101 registration", in Gear's Cloudflare account (hostnames `jirayul.github.io`, `english.samathi101.com`, `localhost`); site key in the variable `PUBLIC_TURNSTILE_SITE_KEY`. Shown on the form, enforced once the live script has `TURNSTILE_SECRET` |
 | Google Analytics | **Live** behind the cookie banner: measurement ID `G-ZS01177BLR` in the variable `PUBLIC_GA_MEASUREMENT_ID`. Ask Gear for access to the GA4 property |
@@ -58,7 +58,6 @@ MIC Online 2027 registration (the course being promoted):
 
 GitHub and Analytics:
 
-- The ruleset "Protect main" requires a pull request but not yet the check bot's tick: add **Require status checks to pass** → `check`, so a red X blocks merging.
 - Google Analytics also counts the client's visits to the review site. That's harmless; to keep the numbers clean, empty the `PUBLIC_GA_MEASUREMENT_ID` variable until the domain switch.
 
 Other courses (not a priority now; the focus is MIC Online):
@@ -212,7 +211,7 @@ Only the `english` subdomain changes; the main `samathi101.com` site and email a
 
 - [ ] Publish on every merge: remove the two `#` before `push:` at the top of `deploy.yml`.
 - [x] **Settings → Rules → Rulesets**: the ruleset "Protect main" requires a pull request and blocks force-pushes and deleting `main`.
-- [ ] Add **Require status checks to pass** → `check` to "Protect main", so nobody can merge a change that fails `npm test`.
+- [x] "Protect main" also requires the status check **`check`** (from GitHub Actions), so a change that fails `npm test` can't be merged.
 - [ ] Optional: verify the domain in your GitHub account (**Settings → Pages → Add a domain**), so nobody else can claim english.samathi101.com on GitHub Pages.
 - [ ] Add volunteers under **Settings → Collaborators**.
 
