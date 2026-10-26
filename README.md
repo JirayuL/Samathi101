@@ -23,7 +23,19 @@ GitHub repo (public) ── deploy bot ──▶ GitHub Pages: the site
 
 ## Demo for the client
 
-`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. Until the review site is up, this is how the client sees it.
+`demo/samathi101-demo.html` is the whole site in one file. Open it in any browser, or send it over LINE or email; it works offline, except the Google Sheet and the course video. YouTube won't play videos inside a page opened from a file, so the demo shows the video's thumbnail with a button that opens it on YouTube. Every `npm run build` and `npm test` regenerates the demo, so commit it with each change. Now that the review site is up, the file is for people who can't open the link, or to show a change before it's merged.
+
+## Status (26 Oct 2026)
+
+| Part | Now |
+|---|---|
+| Review site | **Live** at https://jirayul.github.io/Samathi101/ (GitHub Pages). Published by hand with the deploy bot after each merge |
+| english.samathi101.com | Still the old Canva site, until "Going live" step 3 |
+| Repo | **Public**. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked (repo admins can bypass) |
+| MIC Online registration form | On the site, sending to the **test** script and the TEST sheet for now (secret `PUBLIC_SHEET_API_URL`); the live Sheet comes in "Going live" step 2 |
+| "Verify you are human" | Cloudflare Turnstile widget "Samathi 101 registration", in Gear's Cloudflare account (hostnames `jirayul.github.io`, `english.samathi101.com`, `localhost`); site key in the variable `PUBLIC_TURNSTILE_SITE_KEY`. Shown on the form, enforced once the live script has `TURNSTILE_SECRET` |
+| Google Analytics | **Live** behind the cookie banner: measurement ID `G-ZS01177BLR` in the variable `PUBLIC_GA_MEASUREMENT_ID`. Ask Gear for access to the GA4 property |
+| Demo file | Form connected to the test Sheet; no Analytics, no human check |
 
 ## Open items (26 Oct 2026)
 
@@ -35,13 +47,18 @@ Content to confirm with the foundation:
 
 Design (needs approval, AGENTS.md rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under the 4.5:1 minimum for readable text. It is used for tab labels, the Register tab summaries and small labels.
 
-Going live: see "Going live" below: first the review site on GitHub Pages for the client, then the live Sheet, then the domain switch.
+Going live: the review site is up (see "Status" below). Next come the live Sheet and then the domain switch ("Going live" below).
 
 MIC Online 2027 registration (the course being promoted):
 
-- Update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- If not done yet: update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- The "Verify you are human" check shows on the form but isn't enforced yet: the review site sends to the test script, which has no `TURNSTILE_SECRET`. The live script gets it ("Going live", step 2).
 - The live spreadsheet is, for now, Gear's "Samathi 101 registrations", with its own deployment of the script. Later, move it to the foundation's Google account, so the email copies come from the foundation and the data stays with it.
 - The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
+
+GitHub and Analytics:
+
+- Google Analytics also counts the client's visits to the review site. That's harmless; to keep the numbers clean, empty the `PUBLIC_GA_MEASUREMENT_ID` variable until the domain switch.
 
 Other courses (not a priority now; the focus is MIC Online):
 
@@ -157,17 +174,19 @@ Content still to confirm is listed under "Open items" above.
 
 ## Going live (GitHub Pages)
 
-The site goes live in three steps, each one checked before the next. The deploy bot (`.github/workflows/deploy.yml`, AGENTS.md → "Publishing") runs by hand: **Actions → "Deploy to GitHub Pages" → Run workflow**.
+The site goes live in three steps, each one checked before the next. The deploy bot (`.github/workflows/deploy.yml`, AGENTS.md → "Publishing") runs by hand: **Actions → "Deploy to GitHub Pages" → Run workflow**. Ticked boxes are done (as of 26 Oct 2026).
 
 ### 1. Review site for the client: https://jirayul.github.io/Samathi101/
 
-- [ ] **Test script up to date:** paste the latest `apps-script/Code.gs` and `appsscript.json` into the test script, deploy a **new version** (approve the new "connect to an external service" permission), and add the Script Property `ALLOW_BEFORE_OPENING` = `yes` (`apps-script/README.md`), so the client can try the form before 1 November.
-- [ ] Repo **Settings → General → Danger Zone → Change visibility → Public**.
-- [ ] **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-- [ ] **Settings → Secrets and variables → Actions → Secrets → New repository secret:** `PUBLIC_SHEET_API_URL` = the **test** script's URL, so the client's tries land in the TEST sheet.
-- [ ] **"Verify you are human" check:** in Cloudflare (a free account is enough), **Turnstile → Add widget**: name "Samathi 101 registration", hostnames `jirayul.github.io`, `english.samathi101.com` and `localhost`, mode **Managed**. Then in GitHub, **Settings → Secrets and variables → Actions → Variables → New repository variable:** `PUBLIC_TURNSTILE_SITE_KEY` = the widget's **site key**. Keep the **secret key** for step 2.
-- [ ] **Actions → "Deploy to GitHub Pages" → Run workflow.** build, deploy and verify should turn green (about 2 minutes).
-- [ ] Look at it on a phone and a desktop, send one application marked TEST, then send the link to the client.
+- [ ] **Test script up to date** (check it's done): paste the latest `apps-script/Code.gs` and `appsscript.json` into the test script, deploy a **new version** (approve the new "connect to an external service" permission), and add the Script Property `ALLOW_BEFORE_OPENING` = `yes` (`apps-script/README.md`), so the client can try the form before 1 November.
+- [x] Repo **Settings → General → Danger Zone → Change visibility → Public**.
+- [x] **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+- [x] **Settings → Secrets and variables → Actions → Secrets → New repository secret:** `PUBLIC_SHEET_API_URL` = the **test** script's URL, so the client's tries land in the TEST sheet.
+- [x] **"Verify you are human" check:** in Cloudflare (a free account is enough), **Turnstile → Add widget**: name "Samathi 101 registration", hostnames `jirayul.github.io`, `english.samathi101.com` and `localhost`, mode **Managed**. Then in GitHub, **Settings → Secrets and variables → Actions → Variables → New repository variable:** `PUBLIC_TURNSTILE_SITE_KEY` = the widget's **site key**. Keep the **secret key** for step 2.
+- [x] **Actions → "Deploy to GitHub Pages" → Run workflow.** build, deploy and verify should turn green (about 2 minutes).
+- [x] Look at it on a phone and a desktop.
+- [ ] Send one application marked TEST from the site (the human check needs a real person), and check the row and the email copy.
+- [ ] Send the link to the client.
 
 ### 2. Live Sheet (when the client approves)
 
@@ -175,7 +194,7 @@ The site goes live in three steps, each one checked before the next. The deploy 
 - [ ] Change the secret `PUBLIC_SHEET_API_URL` to the **live** script's URL, then run the deploy bot again.
 - [ ] Before 1 November the form says "opens on 1 November 2026"; from then on it takes applications. Send one marked TEST, check the row and the email copy, then delete the row.
 - [ ] Delete the test rows in the TEST sheet.
-- [ ] **Google Analytics** (optional, free): at analytics.google.com, create a GA4 property "Samathi 101" (time zone Bangkok) with a **Web** data stream for `english.samathi101.com`, and copy its **Measurement ID** (`G-…`). In GitHub, **Settings → Secrets and variables → Actions → Variables:** `PUBLIC_GA_MEASUREMENT_ID` = that ID, then run the deploy bot. The site then shows the cookie banner, and Analytics counts only visitors who allow it (AGENTS.md → "Analytics").
+- [x] **Google Analytics** (optional, free; done early, on the review site): at analytics.google.com, create a GA4 property "Samathi 101" (time zone Bangkok) with a **Web** data stream for `english.samathi101.com`, and copy its **Measurement ID** (`G-…`). In GitHub, **Settings → Secrets and variables → Actions → Variables:** `PUBLIC_GA_MEASUREMENT_ID` = that ID, then run the deploy bot. The site then shows the cookie banner, and Analytics counts only visitors who allow it (AGENTS.md → "Analytics").
 
 ### 3. Switch english.samathi101.com (pick a quiet time)
 
@@ -191,7 +210,8 @@ Only the `english` subdomain changes; the main `samathi101.com` site and email a
 ### After launch
 
 - [ ] Publish on every merge: remove the two `#` before `push:` at the top of `deploy.yml`.
-- [ ] **Settings → Rules → Rulesets → New branch ruleset** for `main`: require a pull request and the status check **check**, so nobody can merge a change that fails `npm test` (free on public repos).
+- [x] **Settings → Rules → Rulesets**: the ruleset "Protect main" requires a pull request and blocks force-pushes and deleting `main`.
+- [x] "Protect main" also requires the status check **`check`** (from GitHub Actions), so a change that fails `npm test` can't be merged.
 - [ ] Optional: verify the domain in your GitHub account (**Settings → Pages → Add a domain**), so nobody else can claim english.samathi101.com on GitHub Pages.
 - [ ] Add volunteers under **Settings → Collaborators**.
 
