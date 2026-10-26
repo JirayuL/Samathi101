@@ -15,6 +15,7 @@ import yuvasa from '../assets/courses/yuvasa.png';
 import micVideo from '../assets/courses/mic-video.png';
 import oneDayChiangMai from '../assets/courses/one-day-chiang-mai.jpg';
 import oneDayPhuket from '../assets/courses/one-day-phuket.png';
+import micOnline from '../assets/courses/mic-online-2027.jpg';
 
 export type ButtonStyle = 'primary' | 'secondary' | 'outline';
 export type Status = 'open' | 'closed' | 'coming-soon';
@@ -162,7 +163,12 @@ export const courses: Course[] = [
     summary: ['Online, 23 January – 27 June 2027', 'Register 1 November – 31 December 2026', 'Free, about 75 places'],
     title: 'FREE Online Meditation Instructor Course (6 Months) | MIC Online Batch 1, 2027',
     status: 'open',
-    // No poster yet, so the course shows as text only
+    images: [
+      {
+        src: micOnline,
+        alt: 'MIC Online Meditation Instructor Course, Online Batch 1 (2027) poster: free six-month course in English, 23 January – 27 June 2027, daily self-study and a weekly live session on Saturday 19:30–21:00 or Sunday 10:00–11:30 (Bangkok time), limited to 75 participants',
+      },
+    ],
     paragraphs: [
       'For the first time, the Willpower Institute Foundation is offering its English-language Meditation Instructor Course (MIC) online, so you can learn and practice wherever you live. Begin a lifelong journey towards inner peace, and help bring peace to the world.',
       'MIC is based on the teachings of the late Somdet Phra Nyanavajirodom (Luangphor Viriyang Sirintharo), a renowned meditation master and founder of the Willpower Institute Foundation. It combines structured theory with systematic meditation practice.',

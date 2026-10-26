@@ -5,10 +5,10 @@
  */
 export const tabs = [
   { id: 'home', label: 'Home' },
+  { id: 'instructor', label: 'Instructor Course' },
   { id: 'children', label: 'Children Course' },
   { id: 'retreat', label: '7-Day Course' },
   { id: 'one-day', label: '1-Day Course' },
-  { id: 'instructor', label: 'Instructor Course' },
   { id: 'contact', label: 'Contact Us' },
   { id: 'register', label: 'Register', highlight: true },
 ] as const;
