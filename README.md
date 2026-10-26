@@ -33,6 +33,7 @@ Content to confirm with the foundation:
 
 - The 7-Day Retreat early fee (THB 3,900) ends 31 Oct 2026, and the site lists no fee after that date.
 - Of the 2026 1-Day Pattaya dates, only 19 Dec is still ahead.
+- The MIC Online poster spells the founder's title "Somdet Phra Nyanavajirodome"; the site and the Google Form use "Nyanavajirodom".
 
 Design (needs approval, AGENTS.md rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under the 4.5:1 minimum for readable text. It is used for tab labels, the Register tab summaries and small labels.
 
@@ -42,7 +43,7 @@ MIC Online 2027 registration:
 
 - Set up the Apps Script (`apps-script/README.md`): the **test** copy now, so the client can try the form in the demo, and the **live** copy before the site is published. Until then the form links to the Google Form.
 - Decide where applications go: the live script can sit in the spreadsheet that already collects the Google Form's answers, so both arrive in one file, in two tabs.
-- The course has no image yet. The Google Form has a "COURSE OVERVIEW" poster (740 × 1110); a copy in `src/assets/courses/` would replace the text-only layout.
+- The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
 
 ## Run it locally
 
@@ -67,7 +68,7 @@ src/
     registration.ts   ← registration forms on the site: questions, texts, the Google Form fallback
   components/
     Header.astro      ← logo + name, centered
-    Tabs.astro        ← sticky tab bar (Home, Children, 7-Day, 1-Day, Instructor, Contact, Register)
+    Tabs.astro        ← sticky tab bar (Home, Instructor, Children, 7-Day, 1-Day, Contact, Register)
     Hero.astro        ← forest-green banner with the gold lotus (Home tab)
     Lotus.astro       ← the lotus line drawing (large, animated) and small ornament
     Divider.astro     ← small lotus between hairlines
@@ -181,7 +182,7 @@ To roll back, the admin puts the old `english` record back.
 
 ## Tabs and links
 
-Each tab has its own link, so you can share a specific tab: `/#home`, `/#children`, `/#retreat`, `/#one-day`, `/#instructor`, `/#contact`, `/#register`. Linking to a single course (e.g. `/#one-day-phuket`) opens the right tab and scrolls to it.
+Each tab has its own link, so you can share a specific tab: `/#home`, `/#instructor`, `/#children`, `/#retreat`, `/#one-day`, `/#contact`, `/#register`. Linking to a single course (e.g. `/#one-day-phuket`) opens the right tab and scrolls to it.
 
 ## Adding features later
 
