@@ -18,7 +18,7 @@ GitHub repo (public) ── deploy bot ──▶ GitHub Pages: the site
 ```
 
 - **GitHub** keeps the code in a public repo (free GitHub Pages needs that); collaborators push. The check bot tests every pull request, and the deploy bot checks, publishes and re-checks the live site, rolling back if that fails.
-- **GitHub Pages** serves the site for free: first at https://jirayul.github.io/Samathi101/ for review, later at english.samathi101.com. It can't keep secrets, so the site holds no keys.
+- **GitHub Pages** serves the site for free: first at https://jirayul.github.io/samathi101/ for review, later at english.samathi101.com. It can't keep secrets, so the site holds no keys.
 - **Google Apps Script + Google Sheet** store the applications sent with the site's registration form (MIC Online 2027), and tell the form whether registration is still open. The script runs as the Google account that deploys it; the Sheet stays private. Setup: `apps-script/README.md`; rules: AGENTS.md → "Google Sheet".
 
 ## Demo for the client
@@ -29,9 +29,9 @@ GitHub repo (public) ── deploy bot ──▶ GitHub Pages: the site
 
 | Part | Now |
 |---|---|
-| Review site | **Live** at https://jirayul.github.io/Samathi101/ (GitHub Pages). Published by hand with the deploy bot after each merge |
+| Review site | **Live** at https://jirayul.github.io/samathi101/ (GitHub Pages). Published by hand with the deploy bot after each merge |
 | english.samathi101.com | Still the old Canva site, until "Going live" step 3 |
-| Repo | **Public**. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked (repo admins can bypass) |
+| Repo | **Public**, renamed to `samathi101` (lowercase) on 27 Oct 2026; the review site moved to the lowercase address with it. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, the check bot (`check`) must pass before merging, and force-pushes and deleting `main` are blocked (repo admins can bypass) |
 | MIC Online registration form | On the site, sending to the **test** script and the TEST sheet for now (secret `PUBLIC_SHEET_API_URL`); the live Sheet comes in "Going live" step 2 |
 | "Verify you are human" | Cloudflare Turnstile widget "Samathi 101 registration", in Gear's Cloudflare account (hostnames `jirayul.github.io`, `english.samathi101.com`, `localhost`); site key in the variable `PUBLIC_TURNSTILE_SITE_KEY`. Shown on the form, enforced once the live script has `TURNSTILE_SECRET` |
 | Google Analytics | **Live** behind the cookie banner: measurement ID `G-ZS01177BLR` in the variable `PUBLIC_GA_MEASUREMENT_ID`. Ask Gear for access to the GA4 property |
@@ -70,10 +70,10 @@ Requires Node.js 22.22 or newer (24 recommended, as in `.node-version`) and Pyth
 
 ```bash
 npm ci             # install the exact versions in package-lock.json
-npm run dev        # http://localhost:4321/Samathi101/ — auto-reloads as you edit
+npm run dev        # http://localhost:4321/samathi101/ — auto-reloads as you edit
 npm test           # build into dist/, update the demo, check every link (the bots run this too)
-npm run preview    # serve dist/ at http://localhost:4321/Samathi101/ to double-check the build
-npm run smoke-test -- http://localhost:4321/Samathi101/   # check a running copy, as the deploy bot checks the live site
+npm run preview    # serve dist/ at http://localhost:4321/samathi101/ to double-check the build
+npm run smoke-test -- http://localhost:4321/samathi101/   # check a running copy, as the deploy bot checks the live site
 npm run mock-sheet # stand-in for the Google Sheet script, to test the registration form (AGENTS.md → "Google Sheet")
 ```
 
@@ -175,7 +175,7 @@ Content still to confirm is listed under "Open items" above.
 
 The site goes live in three steps, each one checked before the next. The deploy bot (`.github/workflows/deploy.yml`, AGENTS.md → "Publishing") runs by hand: **Actions → "Deploy to GitHub Pages" → Run workflow**. Ticked boxes are done (as of 26 Oct 2026).
 
-### 1. Review site for the client: https://jirayul.github.io/Samathi101/
+### 1. Review site for the client: https://jirayul.github.io/samathi101/
 
 - [ ] **Test script up to date** (check it's done): paste the latest `apps-script/Code.gs` and `appsscript.json` into the test script, deploy a **new version** (approve the new "connect to an external service" permission), and add the Script Property `ALLOW_BEFORE_OPENING` = `yes` (`apps-script/README.md`), so the client can try the form before 1 November.
 - [x] Repo **Settings → General → Danger Zone → Change visibility → Public**.
@@ -199,7 +199,7 @@ The site goes live in three steps, each one checked before the next. The deploy 
 
 Only the `english` subdomain changes; the main `samathi101.com` site and email are not touched.
 
-- [ ] In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Pull request, merge, run the deploy bot. From then on jirayul.github.io/Samathi101/ forwards to english.samathi101.com, so do the next step straight away.
+- [ ] In this repo: set `USE_CUSTOM_DOMAIN = true` in `astro.config.mjs` and rename `public/CNAME.disabled` to `public/CNAME`. Pull request, merge, run the deploy bot. From then on jirayul.github.io/samathi101/ forwards to english.samathi101.com, so do the next step straight away.
 - [ ] The domain admin, in **Cloudflare → DNS** for samathi101.com: **screenshot the current `english` record first** (today an A record to 103.169.142.0, the Canva site), then replace it with Type `CNAME`, Name `english`, Target `jirayul.github.io`, Proxy status **DNS only** (grey cloud).
 - [ ] Repo **Settings → Pages → Custom domain** shows `english.samathi101.com`. Once the DNS check passes, tick **Enforce HTTPS** (the certificate can take up to an hour).
 - [ ] Check https://english.samathi101.com on a phone and a desktop, and run `npm run smoke-test -- https://english.samathi101.com/`.

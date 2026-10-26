@@ -1,8 +1,8 @@
 """Check a running copy of the site: the page loads, every tab is there, and every file it uses loads.
 
 Usage:  npm run smoke-test -- <site URL>
-  live site:      npm run smoke-test -- https://jirayul.github.io/Samathi101/
-  local build:    npm run build && npm run preview   then   npm run smoke-test -- http://localhost:4321/Samathi101/
+  live site:      npm run smoke-test -- https://jirayul.github.io/samathi101/
+  local build:    npm run build && npm run preview   then   npm run smoke-test -- http://localhost:4321/samathi101/
 
 The deploy bot runs this on the live site right after publishing. If it fails, the bot
 republishes the last version that passed (see .github/workflows/deploy.yml).
@@ -10,7 +10,7 @@ Exits with code 1 on any problem.
 """
 import html as htmllib, re, sys, time, urllib.error, urllib.parse, urllib.request
 
-site = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4321/Samathi101/"
+site = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4321/samathi101/"
 if not site.endswith("/"):
     site += "/"
 host = urllib.parse.urlsplit(site).netloc

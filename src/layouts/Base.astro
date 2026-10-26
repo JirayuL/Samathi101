@@ -17,7 +17,7 @@ interface Props {
 
 const { title = site.title, description = site.description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// Works both at /Samathi101/ (GitHub Pages review URL) and at the domain root
+// Works both at /samathi101/ (GitHub Pages review URL) and at the domain root
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
