@@ -5,7 +5,7 @@ Guide for anyone, person or AI coding assistant, who sets up, changes, tests or 
 ## What this is
 
 - The English meditation courses site of the **Willpower Institute Foundation** (Luangphor Viriyang Sirintharo), planned for **https://english.samathi101.com**.
-- **Hosted on GitHub Pages** from this repo, which is public because free GitHub Pages needs that. First as a review site at https://jirayul.github.io/Samathi101/; english.samathi101.com shows the old Canva site until the domain switch. README → "Going live" has the steps.
+- **Hosted on GitHub Pages** from this repo, which is public because free GitHub Pages needs that. The review site is live at https://jirayul.github.io/Samathi101/; english.samathi101.com still shows the old Canva site until the domain switch. README → "Status" says where everything stands, README → "Going live" what's next.
 - A static site built with **Astro**, so any static host can serve it. One page (`src/pages/index.astro`) with tabs: Home, Instructor Course (MIC Online, the course being promoted), Children Course, 7-Day Course, 1-Day Course, Contact Us, Register.
 - Applications for **MIC Online 2027** go through the site's own form into a **Google Sheet**, through a Google Apps Script web app. The other courses use their Google Forms. See "Google Sheet" below.
 - This is volunteer work for a charity. Keep running costs at zero, and keep things simple enough for the next volunteer to pick up.
@@ -85,7 +85,7 @@ The deploy bot (`.github/workflows/deploy.yml`) publishes `main` to GitHub Pages
 3. **verify**: `scripts/smoke-test.py` on the live URL: the page, every tab, every image, font and stylesheet.
 4. **rollback**: only if verify fails. It rebuilds the last version that passed, publishes it and checks it again.
 
-A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it. To publish on every merge into `main`, remove the two `#` before `push:` at the top of `deploy.yml`.
+**After merging a pull request, run the deploy bot** to publish it; until publishing on every merge is switched on, merging alone changes nothing on the site. A failed run is red, and GitHub emails whoever started it. After a rollback, the broken commit is still on `main`, so revert it (`git revert <sha>` on a branch, then a pull request) or fix it. To publish on every merge into `main`, remove the two `#` before `push:` at the top of `deploy.yml`.
 
 Pull requests get the check bot (`check.yml`), which runs `npm test`, so a red X shows up before anything is merged. First publish, the live Sheet and the domain switch: README → "Going live".
 
@@ -112,7 +112,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 
 ## Analytics (Google Analytics 4)
 
-- **Consent first:** with a measurement ID in `PUBLIC_GA_MEASUREMENT_ID` (a GitHub variable), the site shows a cookie banner at the bottom. Nothing is loaded from Google until the visitor clicks "Allow analytics"; "No thanks" is remembered, and "Cookie settings" in the footer changes the choice. Switching off also removes Analytics' cookies. Both buttons look the same on purpose.
+- **Consent first:** with a measurement ID in `PUBLIC_GA_MEASUREMENT_ID` (a GitHub variable; now `G-ZS01177BLR`, live on the review site), the site shows a cookie banner at the bottom. Nothing is loaded from Google until the visitor clicks "Allow analytics"; "No thanks" is remembered, and "Cookie settings" in the footer changes the choice. Switching off also removes Analytics' cookies. Both buttons look the same on purpose.
 - **What is sent:** the usual page visit, plus three events with ids only (never names, emails or answers):
   - `view_tab` (`tab_id`): someone opened a tab;
   - `register_click` (`course_id`, `destination` = `site_form` or `google_form`, `tab_id`): someone clicked a Register button;
@@ -146,7 +146,7 @@ visitor's browser  ── fetch ──▶  Apps Script web app  ──▶  Googl
 - [ ] No passwords, API keys or Google Sheet links in the code
 - [ ] The updated `demo/samathi101-demo.html` is committed with the change (`npm test` regenerates it)
 
-Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review.
+Work on a branch and open a pull request into `main`; the pull request template repeats this list. Ask Gear (JirayuL) to review. `main` is protected by the ruleset "Protect main": changes arrive only through a pull request, and force-pushes and deleting `main` are blocked. It doesn't require the check bot yet, so look for the green tick before merging.
 
 ## Open items (26 Oct 2026)
 
@@ -158,13 +158,19 @@ Content to confirm with the foundation:
 
 Design (needs approval, rule 4): the grey `--forest-mute` text is 4.35:1 on the page background, just under 4.5:1. It is used for tab labels, the Register tab summaries and small labels.
 
-Going live: README → "Going live": first the review site on GitHub Pages for the client, then the live Sheet, then the domain switch.
+Going live: the review site is up (README → "Status"). Next come the live Sheet and then the domain switch (README → "Going live").
 
 MIC Online 2027 registration (the course being promoted):
 
-- Update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- If not done yet: update the **test** script to the latest `Code.gs` and `appsscript.json` (registration opening date, "Verify you are human" check), approve the new permission, and give it the Script Property `ALLOW_BEFORE_OPENING` = `yes`, so the client can try the form before 1 November (`apps-script/README.md`).
+- The "Verify you are human" check shows on the form but isn't enforced yet: the review site sends to the test script, which has no `TURNSTILE_SECRET`. The live script gets it (README → "Going live", step 2).
 - The live spreadsheet is, for now, Gear's "Samathi 101 registrations", with its own deployment of the script. Later, move it to the foundation's Google account, so the email copies come from the foundation and the data stays with it.
 - The course poster on the site is a small copy (360 × 540), so it looks soft, especially when enlarged. A larger original (1000 px wide or more) can simply replace `src/assets/courses/mic-online-2027.jpg`.
+
+GitHub and Analytics:
+
+- The ruleset "Protect main" requires a pull request but not yet the check bot's tick: add **Require status checks to pass** → `check`, so a red X blocks merging.
+- Google Analytics also counts the client's visits to the review site. That's harmless; to keep the numbers clean, empty the `PUBLIC_GA_MEASUREMENT_ID` variable until the domain switch.
 
 Other courses (not a priority now; the focus is MIC Online):
 
