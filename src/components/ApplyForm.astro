@@ -298,6 +298,8 @@ const columns = form.sections.flatMap((s) => s.fields.map((f) => ({ name: f.name
             form: form.dataset.formId,
             website: data.get('website') ?? '',
             email: answer(data, 'email'),
+            // Only to label the person in the private Students registry (never shown on the page or sent to a tracker)
+            name: [answer(data, 'first_name'), answer(data, 'last_name')].filter(Boolean).join(' '),
             consent: answer(data, 'consent'),
             turnstile: token,
             answers: columns.map((c) => [c.label, answer(data, c.name)]),

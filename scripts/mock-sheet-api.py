@@ -65,7 +65,10 @@ class Handler(BaseHTTPRequestHandler):
         if HUMAN and not data.get("turnstile"):
             return self.reply({"ok": False, "error": 'Please complete the "Verify you are human" check above the Submit button, then send again.'})
         count += 1
-        print(f"\n=== Application {count} for {data.get('form')} (human check token: {'yes' if data.get('turnstile') else 'no'}) ===")
+        reference = f"MOCK-{count:04d}"  # the live script issues real ids (MIC27-0001, Student IDs); this is only a stand-in
+        print(f"\n=== Application {count} for {data.get('form')} ({reference}, human check token: {'yes' if data.get('turnstile') else 'no'}) ===")
+        if data.get("name"):
+            print(f"  name (for the Students registry)  {data['name']!r}")
         for question, answer in data.get("answers", []):
             print(f"  {question[:70]:70}  {answer!r}")
         self.reply({"ok": True, "emailed": True})

