@@ -54,7 +54,7 @@ export interface Course {
 }
 
 const BROCHURE_7_DAY =
-  'https://drive.google.com/file/d/1uY_JoWNuKbijPsAvoMBGwi25hAfshNoB/view?usp=sharing';
+  'https://drive.google.com/file/d/1-eyVVw9mam073CIxwvcezs_sM-22Jia6/view?usp=sharing';
 
 export const courses: Course[] = [
   {
@@ -81,8 +81,8 @@ export const courses: Course[] = [
     facts: [
       { label: 'Duration', value: '17–24 December 2026' },
       { label: 'Location', value: 'Wat Pa Dhampanomwan, Wang Nam Khiao, Nakhon Ratchasima, Thailand' },
-      { label: 'Early Registration Fee', value: 'THB 3,900 — register by 31 October 2026' },
-      { label: 'Registration Deadline', value: '30 November 2026, or earlier if all spaces are filled' },
+      { label: 'Registration Fee', value: 'THB 3,900 — register by 31 October 2026' },
+      { label: 'Registration', value: '1 October – 31 October 2026\nLate registration 1–30 November 2026, if spaces remain' },
     ],
     afterFacts: [
       'The fee covers accommodation, meals, facility expenses, and round-trip coach transportation between Bangkok and the retreat venue.',
@@ -175,10 +175,11 @@ export const courses: Course[] = [
     ],
     facts: [
       { label: 'Duration', value: '23 January – 27 June 2027' },
-      { label: 'Registration', value: '1 November – 31 December 2026\nLate registration 1–10 January 2027, if places remain' },
+      { label: 'Registration', value: '1 November – 31 December 2026\nLate registration 1–10 January 2027, if spaces remain' },
       { label: 'Places', value: 'About 75 participants' },
       { label: 'Fee', value: 'Free of charge' },
       { label: 'Orientation', value: 'Saturday 23 January 2027, 19:30–21:00, on Zoom' },
+      { label: 'Daily Self-Study', value: 'Study daily lectures independently via online learning platform' },
       {
         label: 'Weekly live session',
         value: 'Saturday 19:30–21:00 or Sunday 10:00–11:30\nChoose one as your main session; join the other in weeks you miss it',
