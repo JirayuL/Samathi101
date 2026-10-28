@@ -1,12 +1,21 @@
 ---
-import Lotus from './Lotus.astro';
+import Carousel from './Carousel.astro';
 import { site } from '../data/site';
+import heroLecture from '../assets/home/hero-lecture.jpg';
+import heroWalking from '../assets/home/hero-walking.jpg';
+import heroSeated from '../assets/home/hero-seated.jpg';
+
+const heroSlides = [
+  { src: heroLecture, alt: 'A teacher leading an English meditation class, with students seated at desks' },
+  { src: heroWalking, alt: 'Participants practising walking meditation in a bright hall' },
+  { src: heroSeated, alt: 'A group sitting together in meditation on cushions' },
+];
 ---
 
 <section class="hero">
   <div class="hero__glow" aria-hidden="true"></div>
   <div class="container hero__inner">
-    <Lotus size="large" class="hero__lotus" />
+    <Carousel slides={heroSlides} class="hero__carousel" />
     <h1 class="hero__title">
       {site.heroTitle}
       <span class="hero__subtitle">{site.heroSubtitle}</span>
@@ -40,10 +49,8 @@ import { site } from '../data/site';
     position: relative;
     max-width: 1000px;
   }
-  .hero :global(.hero__lotus) {
-    width: clamp(170px, 26vw, 250px);
-    margin: 0 auto 28px;
-    color: var(--gold-light);
+  .hero :global(.hero__carousel) {
+    margin: 0 auto 38px;
   }
   .hero__title {
     font-weight: 400;
