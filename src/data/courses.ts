@@ -159,7 +159,7 @@ export const courses: Course[] = [
   },
   {
     id: 'mic-online-2027',
-    tab: 'instructor',
+    tab: 'mic-online',
     summary: ['Online, 23 January – 27 June 2027', 'Register 1 November – 31 December 2026', 'Free, about 75 places'],
     title: 'FREE Online Meditation Instructor Course (6 Months) | MIC Online Batch 1, 2027',
     status: 'open',
@@ -229,7 +229,7 @@ export const courses: Course[] = [
   },
   {
     id: 'meditation-instructor-course',
-    tab: 'instructor',
+    tab: 'mic',
     summary: ['Six months, May–October 2026', 'Thailand, Jakarta and Los Angeles', 'Free'],
     title: 'FREE Meditation Instructor Course (6 Months) | Thailand • Indonesia • USA',
     status: 'closed',
