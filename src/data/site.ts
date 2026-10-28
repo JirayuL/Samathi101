@@ -2,14 +2,14 @@
 
 export const site = {
   name: 'Willpower Institute',
-  tagline: 'Founded by Luangphor Viriyang Sirintharo',
+  tagline: 'Luangphor Viriyang Sirintharo',
   title: 'THAILAND Willpower Institute, English Meditation Courses',
   description:
     'Meditation courses in English of Willpower Institute Foundation Luangphor Viriyang Sirintharo.',
   heroTitle: 'English Meditation Courses',
-  heroSubtitle: 'in Thailand, Indonesia and the USA',
+  heroSubtitle: 'Rooted in Thailand, Expanding Worldwide.',
   heroLine:
-    'Based on the teachings of Somdet Phra Nyanavajirodom (Luangphor Viriyang Sirintharo), in the lineage of the Thai Forest tradition.',
+    'Based on the teachings of Somdet Phra Nyanavajirodom (Luangphor Viriyang Sirintharo), in the lineage of the Thai Forest Monastic tradition.',
   quote: 'Meditation promotes reason, responsibility, and loving-kindness.',
 };
 
