@@ -4,10 +4,10 @@
  * Later this is where the on-site registration form (saving to the Google Sheet) will live.
  */
 import { courses, type Status } from '../data/courses';
-import { tabs } from '../data/tabs';
+import { panels } from '../data/tabs';
 import Button from './Button.astro';
 
-const tabOrder = tabs.map((t) => t.id as string);
+const tabOrder = [...panels] as string[];
 const statusOrder: Record<Status, number> = { open: 0, 'coming-soon': 1, closed: 2 };
 const statusLabel: Record<Status, string> = {
   open: 'Open for registration',
@@ -23,7 +23,7 @@ const list = [...courses].sort(
 <section class="register">
   <div class="container">
     <div class="section-head">
-      <h2>Register for a course</h2>
+      <h2>All Courses</h2>
       <p>
         All meditation training is free. Our instructors and staff volunteer their time and receive no teaching fees.
         However, accommodation and transportation fees apply to the 7-Day Retreat.

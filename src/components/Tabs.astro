@@ -1,54 +1,74 @@
 ---
 /**
- * Sticky tab bar. Each tab links to a panel with the same id (e.g. #one-day),
- * so links still work with JavaScript off — the page just shows every panel.
+ * Sticky header navigation. Three items — Home, an "All Courses" dropdown, and Contact Us —
+ * each linking to a panel with the same id (e.g. #mic-online), so links still work with
+ * JavaScript off (the page then shows every panel, and the All Courses index lists them).
+ * The dropdown opens on hover (desktop) or the caret (touch/keyboard); picking a course shows
+ * its panel, and "All Courses" itself opens the course index.
  */
-interface Props {
-  tabs: readonly { id: string; label: string; highlight?: boolean }[];
-}
+import type { NavItem } from '../data/tabs';
 
-const { tabs } = Astro.props;
-const isCta = (t: Props['tabs'][number]) => 'highlight' in t && !!t.highlight;
-// Regular tabs scroll sideways on phones; highlighted ones (Register) stay pinned on the right
-const regular = tabs.filter((t) => !isCta(t));
-const pinned = tabs.filter(isCta);
-const first = tabs[0].id;
+interface Props {
+  nav: readonly NavItem[];
+}
+const { nav } = Astro.props;
+const first = nav[0].id;
 ---
 
 <nav class="tabs" aria-label="Page sections">
   <div class="container">
     <div class="tabs__list" role="tablist">
-      <div class="tabs__scroll">
-        {
-          regular.map((t) => (
+      {
+        nav.map((item) =>
+          item.children ? (
+            <div class="tabs__group" data-group>
+              <a
+                class="tab"
+                role="tab"
+                id={`tab-${item.id}`}
+                href={`#${item.id}`}
+                aria-controls={item.id}
+                aria-selected="false"
+                tabindex="-1"
+              >
+                {item.label}
+              </a>
+              <button
+                class="tabs__caret"
+                type="button"
+                aria-expanded="false"
+                aria-controls={`${item.id}-menu`}
+                aria-label={`Show ${item.label}`}
+                data-caret
+              >
+                <svg aria-hidden="true" viewBox="0 0 10 6" width="11" height="7">
+                  <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <ul class="tabs__menu" id={`${item.id}-menu`} data-menu hidden>
+                {item.children.map((c) => (
+                  <li>
+                    <a class="tabs__menu-link" href={`#${c.id}`} aria-controls={c.id}>
+                      {c.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
             <a
               class="tab"
               role="tab"
-              id={`tab-${t.id}`}
-              href={`#${t.id}`}
-              aria-controls={t.id}
-              aria-selected={t.id === first ? 'true' : 'false'}
-              tabindex={t.id === first ? 0 : -1}
+              id={`tab-${item.id}`}
+              href={`#${item.id}`}
+              aria-controls={item.id}
+              aria-selected={item.id === first ? 'true' : 'false'}
+              tabindex={item.id === first ? 0 : -1}
             >
-              {t.label}
+              {item.label}
             </a>
-          ))
-        }
-      </div>
-      {
-        pinned.map((t) => (
-          <a
-            class="tab tab--cta"
-            role="tab"
-            id={`tab-${t.id}`}
-            href={`#${t.id}`}
-            aria-controls={t.id}
-            aria-selected="false"
-            tabindex={-1}
-          >
-            {t.label}
-          </a>
-        ))
+          )
+        )
       }
     </div>
   </div>
@@ -57,33 +77,45 @@ const first = tabs[0].id;
 <script>
   const bar = document.querySelector<HTMLElement>('.tabs')!;
   const list = bar.querySelector<HTMLElement>('[role="tablist"]')!;
-  const scroller = bar.querySelector<HTMLElement>('.tabs__scroll')!;
-  const tabEls = [...list.querySelectorAll<HTMLAnchorElement>('[role="tab"]')];
+  const tabEls = [...list.querySelectorAll<HTMLAnchorElement>('.tab')]; // top-level tabs only
   const panels = [...document.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
   const panelsWrap = panels[0]?.parentElement;
+  const groups = [...list.querySelectorAll<HTMLElement>('[data-group]')];
+
+  // Map each dropdown child panel id -> its parent tab id, so a course panel highlights "All Courses".
+  const childParent = new Map<string, string>();
+  for (const g of groups) {
+    const parentId = g.querySelector<HTMLElement>('.tab')?.getAttribute('aria-controls');
+    if (!parentId) continue;
+    for (const link of g.querySelectorAll<HTMLAnchorElement>('.tabs__menu-link')) {
+      childParent.set(link.hash.replace(/^#/, ''), parentId);
+    }
+  }
+  // The MIC Online registration page is reached from the MIC Online course, so keep All Courses lit there.
+  childParent.set('mic-online-registration', 'all-courses');
 
   function activate(id: string) {
     const panel = panels.find((p) => p.id === id);
     if (!panel) return false;
+    const top = childParent.get(id) ?? id; // which top-level tab to highlight
     for (const t of tabEls) {
-      const on = t.getAttribute('aria-controls') === id;
+      const on = t.getAttribute('aria-controls') === top;
       t.setAttribute('aria-selected', String(on));
       t.tabIndex = on ? 0 : -1;
-      if (on && scroller.contains(t)) scroller.scrollTo({ left: t.offsetLeft - scroller.offsetLeft - 16, behavior: 'smooth' });
     }
     for (const p of panels) p.classList.toggle('is-active', p === panel);
     document.dispatchEvent(new CustomEvent('samathi:tab', { detail: { id } })); // for Analytics.astro
     return true;
   }
 
-  // After switching tabs, bring the start of the content up under the bar (only if we're scrolled past it)
+  // After switching, bring the start of the content up under the bar (only if scrolled past it)
   function scrollToPanelsTop() {
     if (!panelsWrap) return;
     const y = panelsWrap.getBoundingClientRect().top + window.scrollY - bar.offsetHeight;
     if (window.scrollY > y) window.scrollTo({ top: y });
   }
 
-  // Resolve a #hash: either a tab id, or any element inside a panel (e.g. #one-day-phuket)
+  // Resolve a #hash: a panel id, or any element inside a panel (e.g. #apply-mic-online-2027)
   function go(hash: string, opts: { smooth?: boolean } = {}) {
     const id = decodeURIComponent(hash.replace(/^#/, ''));
     if (!id) return false;
@@ -102,9 +134,60 @@ const first = tabs[0].id;
     return false;
   }
 
-  // In-page links (tabs and links like "Please join a 1-day course")
+  // ---- Dropdown menus ----
+  const canHover = window.matchMedia('(hover: hover)');
+  function setMenu(group: HTMLElement, open: boolean) {
+    const caret = group.querySelector<HTMLButtonElement>('[data-caret]')!;
+    const menu = group.querySelector<HTMLElement>('[data-menu]')!;
+    caret.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+  }
+  function closeAllMenus(except?: HTMLElement) {
+    for (const g of groups) if (g !== except) setMenu(g, false);
+  }
+
+  for (const group of groups) {
+    const caret = group.querySelector<HTMLButtonElement>('[data-caret]')!;
+    const menu = group.querySelector<HTMLElement>('[data-menu]')!;
+    const links = [...menu.querySelectorAll<HTMLAnchorElement>('.tabs__menu-link')];
+
+    caret.addEventListener('click', () => {
+      const open = caret.getAttribute('aria-expanded') === 'true';
+      closeAllMenus(group);
+      setMenu(group, !open);
+    });
+    if (canHover.matches) {
+      group.addEventListener('mouseenter', () => setMenu(group, true));
+      group.addEventListener('mouseleave', () => setMenu(group, false));
+    }
+    // Close when focus leaves the group entirely
+    group.addEventListener('focusout', (e) => {
+      if (!group.contains(e.relatedTarget as Node)) setMenu(group, false);
+    });
+    // Keyboard: open and step through the menu, Escape closes
+    group.addEventListener('keydown', (e) => {
+      const i = links.indexOf(document.activeElement as HTMLAnchorElement);
+      if (e.key === 'Escape') {
+        setMenu(group, false);
+        caret.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMenu(group, true);
+        (i < 0 ? links[0] : links[Math.min(i + 1, links.length - 1)])?.focus();
+      } else if (e.key === 'ArrowUp' && i >= 0) {
+        e.preventDefault();
+        (i === 0 ? caret : links[i - 1]).focus();
+      }
+    });
+    // Picking a course closes the menu (navigation is handled by the click listener below)
+    for (const link of links) link.addEventListener('click', () => setMenu(group, false));
+  }
+
   document.addEventListener('click', (e) => {
-    const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+    const t = e.target as Element;
+    if (!t.closest('[data-group]')) closeAllMenus();
+    // In-page links (tabs, menu links, and links like "Please join a 1-day course")
+    const a = t.closest<HTMLAnchorElement>('a[href^="#"]');
     if (!a || a.getAttribute('href') === '#') return;
     if (go(a.hash, { smooth: true })) {
       e.preventDefault();
@@ -112,8 +195,9 @@ const first = tabs[0].id;
     }
   });
 
-  // Arrow keys move between tabs
+  // Arrow keys move between the top-level tabs
   list.addEventListener('keydown', (e) => {
+    if ((e.target as Element).closest('[data-menu]')) return; // menu has its own keys
     const i = tabEls.indexOf(document.activeElement as HTMLAnchorElement);
     if (i < 0) return;
     const next =
@@ -137,7 +221,7 @@ const first = tabs[0].id;
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgba(255, 253, 249, 0.94);
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-top: 1px solid var(--rule);
@@ -146,35 +230,13 @@ const first = tabs[0].id;
   .tabs__list {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-inline: -8px;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
   }
-  .tabs__scroll {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-    gap: 2px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .tabs__scroll::-webkit-scrollbar {
-    display: none;
-  }
-  /* Phones: fade the right edge to hint there are more tabs */
-  @media (max-width: 999px) {
-    .tabs__scroll {
-      mask-image: linear-gradient(90deg, #000 80%, transparent);
-      -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent);
-    }
-  }
-  /* Desktop: one centered row, like a temple facade */
-  @media (min-width: 1000px) {
+  @media (min-width: 720px) {
     .tabs__list {
-      justify-content: center;
       gap: 14px;
-    }
-    .tabs__scroll {
-      flex: 0 1 auto;
     }
   }
   .tab {
@@ -210,28 +272,74 @@ const first = tabs[0].id;
     transform: translateX(-50%);
     background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
   }
-  /* Register is the call to action at the end of the row */
-  .tab--cta {
-    flex: none;
-    margin-right: 8px;
-    padding: 7px 16px;
-    color: #fff !important;
-    background: var(--kasaya);
-    border-radius: 3px;
-    font-weight: 600;
+
+  /* All Courses dropdown */
+  .tabs__group {
+    position: relative;
+    display: flex;
+    align-items: center;
   }
-  .tab--cta:hover {
-    background: var(--kasaya-deep);
+  .tabs__group .tab {
+    padding-right: 2px;
   }
-  .tab--cta[aria-selected='true'] {
-    background: var(--forest);
+  .tabs__caret {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 8px 8px 2px;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: var(--forest-mute);
+    cursor: pointer;
   }
-  .tab--cta[aria-selected='true']::after {
+  .tabs__caret:hover {
+    color: var(--forest);
+  }
+  .tabs__caret:focus-visible {
+    outline: 2px solid var(--saffron);
+    outline-offset: -3px;
+  }
+  .tabs__caret svg {
+    transition: transform 0.2s ease;
+  }
+  .tabs__caret[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+  .tabs__menu {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 230px;
+    max-width: min(320px, calc(100vw - 24px));
+    margin: 0;
+    padding: 7px;
+    list-style: none;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+    z-index: 30;
+  }
+  .tabs__menu[hidden] {
     display: none;
   }
-  @media (min-width: 1000px) {
-    .tab {
-      padding-inline: 14px;
-    }
+  .tabs__menu li {
+    margin: 0;
+  }
+  .tabs__menu-link {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 4px;
+    color: var(--forest-soft);
+    text-decoration: none;
+    font-size: 15.5px;
+    line-height: 1.4;
+  }
+  .tabs__menu-link:hover,
+  .tabs__menu-link:focus-visible {
+    background: var(--palm);
+    color: var(--forest);
+    outline: none;
   }
 </style>
