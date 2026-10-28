@@ -1,5 +1,6 @@
 ---
-import Lotus from './Lotus.astro';
+import { Image } from 'astro:assets';
+import logo from '../assets/brand/logo.png';
 const year = new Date().getFullYear();
 // Shown by Analytics.astro when analytics is set up, to change the cookie choice
 const analytics = !!(import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '').trim();
@@ -7,7 +8,7 @@ const analytics = !!(import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '').trim();
 
 <footer class="footer">
   <div class="container">
-    <Lotus size="small" class="footer__lotus" />
+    <Image src={logo} alt="Willpower Institute Foundation logo" width={56} height={56} class="footer__logo" />
     <p class="footer__name">Willpower Institute Foundation</p>
     <p>Wat Dhammamongkol, Soi Sukhumvit 101, Bangkok, Thailand</p>
     <p class="footer__small">© {year} Willpower Institute Foundation Luangphor Viriyang Sirintharo</p>
@@ -34,9 +35,11 @@ const analytics = !!(import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? '').trim();
   .footer p {
     margin: 0 0 4px;
   }
-  .footer :global(.footer__lotus) {
+  .footer__logo {
+    display: block;
+    width: 56px;
+    height: 56px;
     margin: 0 auto 14px;
-    color: var(--gold-light);
   }
   .footer__name {
     font-family: var(--font-display);
