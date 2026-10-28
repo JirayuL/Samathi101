@@ -55,12 +55,6 @@ export const registrationForms: RegistrationForm[] = [
       'Limited to approximately 75 participants. Offered by the Willpower Institute Foundation, Luangphor Viriyang Sirintharo.',
     ],
     googleFormUrl: 'https://forms.gle/sPF3JG52DH9VHdRw5',
-    oneOf: [
-      {
-        fields: ['line_id', 'whatsapp'],
-        message: 'Please give your LINE ID or your WhatsApp number, so we can add you to a course chat group.',
-      },
-    ],
     sections: [
       {
         fields: [
@@ -137,15 +131,12 @@ export const registrationForms: RegistrationForm[] = [
           { name: 'first_name', label: 'First name', type: 'text', required: true },
           { name: 'last_name', label: 'Last name', type: 'text', required: true },
           {
-            name: 'line_id',
-            label: 'What is your LINE ID?',
-            type: 'text',
-            help: [
-              'Please provide either your LINE ID or WhatsApp number. We will invite you to one of the course’s chat groups before the course begins.',
-              'LINE is a messaging app primarily used in Thailand. We recommend using WhatsApp if you live outside Thailand and do not have a Thai phone number.',
-            ],
+            name: 'whatsapp',
+            label: 'What is your WhatsApp number?',
+            type: 'tel',
+            required: true,
+            help: ['We will invite you to the course’s WhatsApp group for students before the course begins.'],
           },
-          { name: 'whatsapp', label: 'What is your WhatsApp number?', type: 'tel' },
           { name: 'birth_date', label: 'Date of Birth', type: 'date', required: true },
           { name: 'education', label: 'Education', type: 'checkbox', options: ['Bachelor', 'Master', 'Doctorate'], other: true },
           { name: 'occupation', label: 'Occupation', type: 'text', required: true },
