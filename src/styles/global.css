@@ -1,22 +1,24 @@
 /*
- * Design tokens — "Forest & robe"
- * Drawn from the Thai Forest tradition: forest temple green, the ochre of the
- * forest monk's robe (kasaya), gold leaf, palm-leaf manuscripts and temple lacquer.
- * Change colors and fonts here; components only use these variables.
+ * Design tokens — "Sky & gold"
+ * A calm blue-and-white palette: deep ocean blue for headings and the hero/footer,
+ * blue-greys for text, cool whites for the page, with gold leaf and robe saffron kept
+ * as warm accents and lacquer red for alerts. Change colors and fonts here; components
+ * only use these variables. (The variable names are kept from the previous "Forest &
+ * robe" palette to keep this a one-file change — e.g. --forest is now a blue.)
  */
 :root {
-  --forest: #1f3b2d; /* deep forest green — headings, hero, footer */
-  --forest-soft: #4b5a4f; /* body text */
-  --forest-mute: #6f7b72; /* secondary text */
-  --kasaya: #a2561a; /* robe ochre — primary actions, links */
-  --kasaya-deep: #86460f;
-  --saffron: #e2a13b; /* highlights on dark backgrounds */
+  --forest: #1d3a5a; /* deep ocean blue — headings, hero, footer */
+  --forest-soft: #3c4a5c; /* body text */
+  --forest-mute: #5a6878; /* secondary text */
+  --kasaya: #1e5aa0; /* blue — primary actions, links */
+  --kasaya-deep: #164a86;
+  --saffron: #e2a13b; /* warm gold — highlights on dark backgrounds */
   --gold: #c39a48; /* gold leaf — ornaments and rules */
-  --gold-light: #e2c47e; /* gold on forest green */
-  --lacquer: #7a2418; /* temple lacquer red — brand name, closed notices */
-  --palm: #f4ecdb; /* palm-leaf manuscript — quiet bands */
-  --paper: #fffdf9; /* page */
-  --ivory: #fbf5e8; /* text on forest green */
+  --gold-light: #e2c47e; /* gold on deep blue */
+  --lacquer: #7a2418; /* lacquer red — brand name, closed notices */
+  --palm: #eaf1f8; /* soft blue — quiet bands */
+  --paper: #fbfcfe; /* page */
+  --ivory: #f2f6fb; /* text on deep blue */
   --rule: rgba(195, 154, 72, 0.38);
 
   --font-display: 'Taviraj', 'Georgia', serif;
