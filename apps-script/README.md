@@ -30,7 +30,7 @@ Make **two copies**: a **test** one for development and demos, and the **live** 
 
 ## Good to know
 
-- **Columns:** row 1 holds the questions, worded as in the Google Form. A question the tab hasn't seen before gets a new column at the end, so don't rename row 1 by hand.
+- **Columns and IDs:** row 1 of a course tab is `Application ID`, `Student ID`, `Timestamp`, then the questions (worded as in the Google Form). A question the tab hasn't seen before gets a new column at the end, so don't rename row 1 by hand. The **Application ID** (e.g. `MIC27-0001`, from `prefix` in `FORMS`) is one per application and is the reference in the applicant's email; the **Student ID** (`WIF-00001`) is one per person, matched on email and reused across every course and year. A separate **Students** tab lists the people behind the Student IDs — the start of a cross-course student database. Both tabs appear automatically on the first application. (A tab that already holds applications from before IDs existed keeps its layout and just gets the two id columns added at the end.)
 - **Privacy (PDPA):** share the spreadsheet only with the people who handle registrations. The web app answers only "open or closed" to the public and never returns anyone's answers.
 - **Spam:** the form has a hidden field that people never fill in, and applications with it filled in are dropped quietly. On the live copy, the "Verify you are human" check (Cloudflare Turnstile) stops automated sending as well; if Cloudflare can't be reached, applications are refused rather than let through, and the page offers the Google Form.
 - **Email limit:** a free Google account can send about 100 emails a day. If the limit is reached, the application is still saved; the applicant just doesn't get their copy.
