@@ -46,7 +46,10 @@ export interface Course {
   sections?: { heading: string; text?: string; items?: string[] }[];
   links?: { label: string; href: string }[];
   enrollNote?: string;
-  closedNote?: { text: string[]; linkLabel?: string; linkHref?: string };
+  closedNote?: {
+    text: string[];
+    options?: { heading: string; detail?: string; linkLabel?: string; linkHref?: string }[];
+  };
   /** Short lines shown on the Register tab (when, where, fee) */
   summary?: string[];
   /** kind: 'download' buttons (brochures) are not repeated on the Register tab */
@@ -60,7 +63,7 @@ export const courses: Course[] = [
   {
     id: 'retreat-7-day',
     tab: 'retreat',
-    summary: ['17–24 December 2026', 'Wat Pa Dhampanomwan, Nakhon Ratchasima', 'THB 3,900 if you register by 31 October'],
+    summary: ['17–24 December 2026', 'Wat Pa Dhampanomwan, Nakhon Ratchasima', 'Register 1 October – 30 November 2026', 'THB 3,900'],
     title: '7 Days Of Mind Power : English Meditation Retreat',
     status: 'open',
     images: [
@@ -81,8 +84,8 @@ export const courses: Course[] = [
     facts: [
       { label: 'Duration', value: '17–24 December 2026' },
       { label: 'Location', value: 'Wat Pa Dhampanomwan, Wang Nam Khiao, Nakhon Ratchasima, Thailand' },
-      { label: 'Registration Fee', value: 'THB 3,900 — register by 31 October 2026' },
-      { label: 'Registration', value: '1 October – 31 October 2026\nLate registration 1–30 November 2026, if spaces remain' },
+      { label: 'Registration Fee', value: 'THB 3,900' },
+      { label: 'Registration', value: '1 October – 30 November 2026' },
     ],
     afterFacts: [
       'The fee covers accommodation, meals, facility expenses, and round-trip coach transportation between Bangkok and the retreat venue.',
@@ -160,7 +163,7 @@ export const courses: Course[] = [
   {
     id: 'mic-online-2027',
     tab: 'mic-online',
-    summary: ['Online, 23 January – 27 June 2027', 'Register 1 November – 31 December 2026', 'Free, about 75 places'],
+    summary: ['Online, 23 January – 27 June 2027', 'Register 1 November – 31 December 2026', 'Free, about 75 spaces'],
     title: 'FREE Online Meditation Instructor Course (6 Months) | MIC Online Batch 1, 2027',
     status: 'open',
     images: [
@@ -176,7 +179,7 @@ export const courses: Course[] = [
     facts: [
       { label: 'Duration', value: '23 January – 27 June 2027' },
       { label: 'Registration', value: '1 November – 31 December 2026\nLate registration 1–10 January 2027, if spaces remain' },
-      { label: 'Places', value: 'About 75 participants' },
+      { label: 'Spaces', value: 'About 75 participants' },
       { label: 'Fee', value: 'Free of charge' },
       { label: 'Orientation', value: 'Saturday 23 January 2027, 19:30–21:00, on Zoom' },
       { label: 'Daily Self-Study', value: 'Study daily lectures independently via online learning platform' },
@@ -257,9 +260,14 @@ export const courses: Course[] = [
       },
     ],
     closedNote: {
-      text: ['Registration deadline for MIC Batch 3 for the year 2026 has passed.', 'The next MIC is online, January–June 2027.'],
-      linkLabel: 'See MIC Online Batch 1 (2027)',
-      linkHref: '#mic-online-2027',
+      text: [
+        'Registration for MIC Batch 3 (2026) has closed.',
+        'In 2027, both online and in-person courses will be available:',
+      ],
+      options: [
+        { heading: 'MIC Online | January–June 2027', linkLabel: 'MIC Online Batch 1 (2027)', linkHref: '#mic-online-2027' },
+        { heading: 'MIC In-Person | May–October 2027', detail: 'Details to be announced.' },
+      ],
     },
     // forms.gle/VA9aqUrcUoFoeZ1u7 = "2026 Meditation Instructor Course USA Application Form" (closed).
     // When registration reopens: set status to 'open' and add

@@ -50,13 +50,11 @@ const list = [...courses].sort(
                 )}
               </div>
               <div class="entry__actions">
-                {c.status === 'open' ? (
-                  buttons.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} course={c.id} />)
-                ) : (
-                  <a class="entry__more" href={`#${c.id}`}>
-                    Read about this course
-                  </a>
-                )}
+                {c.status === 'open' &&
+                  buttons.map((b) => <Button href={b.href} label={b.label} sub={b.sub} style={b.style} course={c.id} />)}
+                <a class="entry__more" href={`#${c.id}`}>
+                  Read about this course
+                </a>
               </div>
             </li>
           );
@@ -151,6 +149,7 @@ const list = [...courses].sort(
   }
   .entry__more {
     font-weight: 500;
+    flex-basis: 100%;
   }
   .help {
     max-width: 980px;
