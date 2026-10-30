@@ -75,6 +75,16 @@ while files:
     status, content = fetch(url, "GET" if is_css else "HEAD")
     if status == 405:
         status, content = fetch(url)
+    # A just-published file can briefly 503 (or 404) while GitHub Pages' CDN propagates it,
+    # especially in the seconds right after a deploy. Give propagation up to ~90s before
+    # treating it as a real failure, so a healthy deploy isn't wrongly rolled back.
+    tries = 0
+    while status in (404, 503) and tries < 9:
+        time.sleep(10)
+        tries += 1
+        status, content = fetch(url, "GET" if is_css else "HEAD")
+        if status == 405:
+            status, content = fetch(url)
     if status != 200:
         problems.append(f"{status}  {url}")
     elif is_css:  # fonts and images the stylesheet uses
