@@ -123,21 +123,28 @@ const media = await Promise.all(
 
       {
         course.status === 'closed' && course.closedNote && (
-          <p class="closed-note">
-            {course.closedNote.text[0]}{' '}
-            {course.closedNote.text.slice(1).join(' ')}
-            {course.closedNote.linkLabel && course.closedNote.linkHref && (
-              <>
+          <div class="closed-note">
+            {course.closedNote.text.map((p) => <p>{p}</p>)}
+            {course.closedNote.options?.map((o) => (
+              <p class="closed-note__option">
+                <strong>{o.heading}</strong>
                 <br />
-                <a
-                  href={course.closedNote.linkHref}
-                  {...(isExternal(course.closedNote.linkHref) ? { target: '_blank', rel: 'noopener' } : {})}
-                >
-                  {course.closedNote.linkLabel}
-                </a>
-              </>
-            )}
-          </p>
+                {o.linkLabel && o.linkHref ? (
+                  <>
+                    Learn more:{' '}
+                    <a
+                      href={o.linkHref}
+                      {...(isExternal(o.linkHref) ? { target: '_blank', rel: 'noopener' } : {})}
+                    >
+                      {o.linkLabel}
+                    </a>
+                  </>
+                ) : (
+                  o.detail
+                )}
+              </p>
+            ))}
+          </div>
         )
       }
 
@@ -345,6 +352,12 @@ const media = await Promise.all(
   .closed-note a {
     color: var(--lacquer);
     font-weight: 600;
+  }
+  .closed-note p {
+    margin: 0 0 10px;
+  }
+  .closed-note p:last-child {
+    margin-bottom: 0;
   }
 
   .enroll-note {
